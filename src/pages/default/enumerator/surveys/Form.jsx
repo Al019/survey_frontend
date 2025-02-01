@@ -13,6 +13,7 @@ const Form = () => {
   const { uuid } = useParams()
   const [header, setHeader] = useState({})
   const [questions, setQuestions] = useState([])
+  const [answer, setAnswer] = useState({})
 
   useEffect(() => {
     const getSurvey = async () => {
@@ -27,6 +28,17 @@ const Form = () => {
     getSurvey()
   }, [])
 
+  const handleResponseChange = (qIndex, value) => {
+    setAnswer((prev) => ({
+      ...prev,
+      [qIndex]: value
+    }))
+  }
+
+  const handleSubmit = async () => {
+    console.log({ uuid: uuid, answers: answer })
+  }
+
   return (
     <Tabs value={activeTab}>
       <div className="h-[100px] px-4 pt-4 z-10 fixed left-[272px] flex flex-col justify-between right-0 top-0 bg-white border-b">
@@ -40,7 +52,7 @@ const Form = () => {
             </Tooltip>
           </div>
           <div className="flex justify-end">
-            <Btn label="Submit" color="green" />
+            <Btn onClick={handleSubmit} label="Submit" color="green" />
           </div>
         </div>
         <div className="flex justify-center">
@@ -83,28 +95,50 @@ const Form = () => {
                   <div className="grid grid-cols-2">
                     {question.option.map((option, oIndex) => {
                       if (question.type === 'multiple_choice') {
-                        return <Radio key={oIndex} name="multiple_choice" label={option.text} color="green" />
+                        return (
+                          <Radio
+                            key={oIndex}
+                            name={`radio_${qIndex}`}
+                            label={option.text}
+                            color="green"
+                            onChange={() => handleResponseChange(question.id, option.text)}
+                          />
+                        )
                       } else if (question.type === 'checkboxes') {
-                        return <Checkbox key={oIndex} label={option.text} color="green" />
+                        return (
+                          <Checkbox
+                            key={oIndex}
+                            label={option.text}
+                            color="green"
+                            onChange={(e) => {
+                              const checked = e.target.checked
+                              setAnswer((prev) => {
+                                const updated = prev[question.id] ? [...prev[question.id]] : []
+                                if (checked) updated.push(option.text)
+                                else updated.splice(updated.indexOf(option.text), 1)
+                                return { ...prev, [question.id]: updated }
+                              })
+                            }}
+                          />
+                        )
                       }
                     })}
                   </div>
                 )}
                 {question.type === 'dropdown' && (
-                  <div className="grid grid-cols-2">
-                    <Select label="Select option">
-                      {question.option.map((option, oIndex) => {
-                        return <Option key={oIndex}>{option.text}</Option>
-                      })}
-                    </Select>
-                  </div>
+                  <Select label="Select option" onChange={(val) => handleResponseChange(question.id, val)}>
+                    {question.option.map((option, oIndex) => (
+                      <Option key={oIndex} value={option.text}>
+                        {option.text}
+                      </Option>
+                    ))}
+                  </Select>
                 )}
                 {question.type === 'text' && (
-                  <div>
-                    {question.option.map((option, oIndex) => {
-                      return <Inpt key={oIndex} label={option.text} />
-                    })}
-                  </div>
+                  <Inpt
+                    label="Your answer"
+                    onChange={(e) => handleResponseChange(question.id, e.target.value)}
+                  />
                 )}
               </div>
             ))}

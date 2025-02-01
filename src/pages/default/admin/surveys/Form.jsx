@@ -1,253 +1,142 @@
-import { CloudArrowUpIcon, PlusCircleIcon } from "@heroicons/react/24/outline"
+import { PlusCircleIcon } from "@heroicons/react/24/outline"
 import Btn from "../../../../components/Button"
-import { Button, Card, CardBody, Option, Select, Spinner, Switch, Tab, TabPanel, Tabs, TabsBody, TabsHeader, Textarea, Tooltip } from "@material-tailwind/react"
-import { useEffect, useState } from "react"
-import { IoMdRadioButtonOff } from "react-icons/io"
+import { Button, Card, CardBody, Option, Select, Switch, Tab, TabPanel, Tabs, TabsBody, TabsHeader, Textarea, Tooltip } from "@material-tailwind/react"
+import { useEffect, useRef, useState } from "react"
+import { IoMdRadioButtonOff, IoIosArrowDown } from "react-icons/io"
 import { IoCloseOutline } from "react-icons/io5"
 import { FiTrash2 } from "react-icons/fi"
 import { useParams } from "react-router-dom"
 import { v4 as uuidv4 } from 'uuid'
-import { MdCheckBoxOutlineBlank, MdOutlineShortText } from "react-icons/md"
-import { PiTextAlignLeft } from "react-icons/pi"
+import { MdCheckBoxOutlineBlank } from "react-icons/md"
 import Inpt from "../../../../components/Input"
 import axios from "../../../../api/axios"
+import { RxTextAlignLeft } from "react-icons/rx";
 
 const tabs = ["Questions", "Responses", "Settings"]
 
 const Form = () => {
   const [activeTab, setActiveTab] = useState("Questions")
   const { uuid } = useParams()
-  const [header, setHeader] = useState({})
-  const [questions, setQuestions] = useState([])
-  const [typing, setTyping] = useState(null)
-  const [saving, setSaving] = useState(false)
+  const [selected, setSelected] = useState(1)
+  const questionRefs = useRef([])
+  const [survey, setSurvey] = useState({
+    title: "Untitled form",
+    description: "",
+    questions: [
+      {
+        text: "Untitled question",
+        type: "radio",
+        required: 0,
+        options: [
+          {
+            text: "Question option"
+          }
+        ]
+      }
+    ]
+  })
 
-  useEffect(() => {
-    getHeader()
-    getQuestion()
-  }, [])
-
-  const getHeader = async () => {
-    await axios.get('/api/survey/get-header', {
-      params: { uuid }
-    })
-      .then(({ data }) => {
-        setHeader(data)
-      })
+  const handleChangeHeader = (field, value) => {
+    setSurvey({ ...survey, [field]: value })
   }
 
-  const getQuestion = async () => {
-    await axios.get('/api/survey/get-question', {
-      params: { uuid }
-    })
-      .then(({ data }) => {
-        setQuestions(data)
-      })
-  }
+  const handleChangeQuestion = (qIndex, field, value) => {
+    const updatedQuestions = [...survey.questions];
+    updatedQuestions[qIndex][field] = value;
 
-  const handleHeaderChange = (field, value) => {
-    setSaving(true)
-    const newHeader = ({ ...header, [field]: value })
-    setHeader(newHeader)
-    if (typing) {
-      clearTimeout(typing)
+    if (value === 'input') {
+      updatedQuestions[qIndex].options = [{ text: 'Text' }];
+    } else if (['radio', 'checkbox', 'select'].includes(value)) {
+      updatedQuestions[qIndex].options = updatedQuestions[qIndex].options.map(option => ({
+        ...option,
+        text: 'Question option',
+      }))
     }
-    const editHeader = async () => {
-      await axios.post('/api/survey/edit-header', newHeader)
-        .finally(() => {
-          setSaving(false)
-        })
-    }
-    const newTimeOut = setTimeout(() => {
-      editHeader()
-    }, 2000)
-    setTyping(newTimeOut)
+
+    setSurvey({
+      ...survey,
+      questions: updatedQuestions,
+    })
   }
 
-  const handleQuestionChange = async (qIndex, field, value) => {
-    setSaving(true)
-    setQuestions((prevQuestions) => {
-      const updatedQuestions = [...prevQuestions]
+  const handleAddQuestion = () => {
+    const newQuestion = {
+      text: "Untitled question",
+      type: "radio",
+      required: 0,
+      options: [{ text: "Question option" }]
+    }
 
-      if (field === "type") {
-        if (value === "text") {
-          updatedQuestions[qIndex].option = [
-            {
-              id: uuidv4(),
-              text: "Text",
-            },
-          ];
-        } else if (
-          ["multiple_choice", "checkboxes", "dropdown"].includes(value)
-        ) {
-          updatedQuestions[qIndex].option = [
-            {
-              id: uuidv4(),
-              text: "Question option",
-            },
-          ];
-        }
+    setSurvey(prevSurvey => {
+      const updatedQuestions = [...prevSurvey.questions]
+      const insertIndex = selected === 0 ? 0 : selected
+      updatedQuestions.splice(insertIndex, 0, newQuestion)
+
+      setTimeout(() => {
+        setSelected(insertIndex + 1)
+        questionRefs.current[insertIndex]?.scrollIntoView({ behavior: "smooth", block: "center" })
+      }, 100)
+
+      return { ...prevSurvey, questions: updatedQuestions }
+    })
+  }
+
+  const handleRemoveQuestion = (qIndex) => {
+    setSurvey((prev) => {
+      const updatedQuestions = prev.questions.filter((_, index) => index !== qIndex)
+
+      let newSelected = selected
+
+      if (updatedQuestions.length === 0) {
+        newSelected = 0
+      } else if (selected === qIndex + 1) {
+        newSelected = qIndex === 0 ? 1 : qIndex
+      } else if (selected > qIndex + 1) {
+        newSelected -= 1
       }
 
-      updatedQuestions[qIndex][field] = value
-      return updatedQuestions
-    })
-
-    const updatedQuestion = { ...questions[qIndex], [field]: value }
-
-    if (typing) {
-      clearTimeout(typing)
-    }
-    const editQuestion = async () => {
-      await axios.post('/api/survey/edit-question', { uuid, question: updatedQuestion })
-        .finally(() => {
-          setSaving(false)
-        })
-    }
-    const newTimeOut = setTimeout(() => {
-      editQuestion()
-    }, 2000)
-    setTyping(newTimeOut)
-  }
-
-  const handleOptionChange = (qIndex, oIndex, value) => {
-    setSaving(true)
-    setQuestions((prevQuestions) => {
-      const updatedQuestions = [...prevQuestions];
-      updatedQuestions[qIndex].option[oIndex].text = value;
-      return updatedQuestions;
-    });
-
-    const updatedOption = {
-      id: questions[qIndex].option[oIndex].id,
-      question_id: questions[qIndex].id,
-      text: value,
-    };
-
-    if (typing) {
-      clearTimeout(typing)
-    }
-    const editOption = async () => {
-      await axios.post('/api/survey/edit-option', updatedOption)
-        .finally(() => {
-          setSaving(false)
-        })
-    }
-    const newTimeOut = setTimeout(() => {
-      editOption()
-    }, 2000)
-    setTyping(newTimeOut)
-  };
-
-  const addQuestion = async () => {
-    const newQuestion = {
-      id: uuidv4(),
-      uuid: uuid,
-      text: "Untitled question",
-      type: "multiple_choice",
-      required: 0,
-      option: [
-        {
-          id: uuidv4(),
-          text: "Question option"
+      setTimeout(() => {
+        setSelected(newSelected)
+        if (newSelected > 0) {
+          questionRefs.current[newSelected - 1]?.scrollIntoView({ behavior: "smooth", block: "center" })
         }
-      ],
-    }
+      }, 100)
 
-    setQuestions((prev) => [
-      ...prev,
-      newQuestion
-    ])
-
-    await axios.post('/api/survey/add-question', newQuestion)
-      .then(() => {
-        getQuestion()
-      })
-  }
-
-  const deleteQuestion = async (qIndex) => {
-    const questionId = questions[qIndex].id
-    const surveyId = questions[qIndex].survey_id
-
-    setQuestions((prev) => prev.filter((_, i) => i !== qIndex));
-
-    await axios.post(`/api/survey/delete-question`, {
-      id: questionId,
-      survey_id: surveyId
+      return { ...prev, questions: updatedQuestions }
     })
   }
 
-  const addOption = async (qIndex) => {
-    const newOption = {
-      id: uuidv4(),
-      text: "Question option",
-    }
-
-    setQuestions((prevQuestions) => {
-      const updatedQuestions = prevQuestions.map((q, i) =>
-        i === qIndex
-          ? {
-            ...q,
-            option: [...q.option, newOption],
-          }
-          : q
-      )
-      return updatedQuestions;
-    })
-
-    await axios.post('/api/survey/add-option', {
-      question_id: questions[qIndex].id,
-      option: newOption,
-    }).then(() => {
-      getQuestion()
-    })
+  const handleChangeOption = (qIndex, oIndex, value) => {
+    const updatedQuestions = [...survey.questions]
+    updatedQuestions[qIndex].options[oIndex].text = value
+    setSurvey({ ...survey, questions: updatedQuestions })
   }
 
-  const deleteOption = async (questionIndex, optIndex) => {
-    const optionId = questions[questionIndex].option[optIndex].id
-    const questionId = questions[questionIndex].id
-
-    setQuestions((prevQuestions) => {
-      return prevQuestions.map((q, i) => {
-        if (i === questionIndex) {
-          return {
-            ...q,
-            option: q.option.filter((_, oIndex) => oIndex !== optIndex),
-          };
-        }
-        return q;
-      })
-    })
-
-    await axios.post(`/api/survey/delete-option`, {
-      id: optionId,
-      question_id: questionId,
-    })
-      .then(() => {
-        getQuestion()
-      })
+  const handleAddOption = (qIndex) => {
+    const updatedQuestions = [...survey.questions]
+    updatedQuestions[qIndex].options.push({ text: "Question option" })
+    setSurvey({ ...survey, questions: updatedQuestions })
   }
 
-  const handlePublishSurvey = async () => {
-    await axios.post(`/api/survey/publish-survey`, {
-      uuid
-    })
+  const handleRemoveOption = (qIndex, oIndex) => {
+    const updatedQuestions = [...survey.questions]
+    updatedQuestions[qIndex].options.splice(oIndex, 1)
+    setSurvey({ ...survey, questions: updatedQuestions })
+  }
+
+  const handlePublish = async () => {
+    await axios.post('/api/survey/create-survey', { uuid: uuidv4(), survey })
   }
 
   return (
     <Tabs value={activeTab}>
       <div className="h-[100px] px-4 pt-4 z-10 fixed left-[272px] flex flex-col justify-between right-0 top-0 bg-white border-b">
-        <div className="grid grid-cols-2">
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-medium">
-              {header.title}
-            </h1>
-            <Tooltip content={!saving ? "Saved" : "Saving"} placement="bottom">
-              {!saving ? <CloudArrowUpIcon className="size-5 text-blue-500" /> : <Spinner color="blue" className="size-4" />}
-            </Tooltip>
-          </div>
+        <div className="grid grid-cols-2 items-center">
+          <h1 className="text-lg font-medium">
+            {survey.title}
+          </h1>
           <div className="flex justify-end">
-            <Btn onClick={handlePublishSurvey} label="Publish" color="blue" />
+            <Btn onClick={handlePublish} label="Publish" color="blue" />
           </div>
         </div>
         <div className="flex justify-center">
@@ -274,62 +163,61 @@ const Form = () => {
       <div className="mt-[100px] max-w-3xl mx-auto">
         <TabsBody>
           <TabPanel value="Questions" className="space-y-4 pb-40">
-            <div>
-              <div className="p-2 bg-green-500 rounded-t-xl"></div>
-              <div className="bg-white p-6 rounded-b-xl space-y-4">
-                <Inpt value={header.title} onChange={(e) => handleHeaderChange("title", e.target.value)} label="Title" variant="standard" />
-                <Textarea value={header.description} onChange={(e) => handleHeaderChange("description", e.target.value)} label="Description" color="green" />
-              </div>
-            </div>
-            {questions.map((question, qIndex) => (
-              <div key={qIndex} className="bg-white p-6 rounded-xl space-y-4">
-                <div className="flex items-center gap-4">
-                  <Inpt value={question.text} onChange={(e) => handleQuestionChange(qIndex, "text", e.target.value)} label={`Question ${qIndex + 1}`} variant="standard" />
-                  <div className="w-72">
-                    <Select value={question.type} onChange={(val) => handleQuestionChange(qIndex, "type", val)} label="Select type" color="green">
-                      <Option value="multiple_choice">Multiple choice</Option>
-                      <Option value="checkboxes">Checboxes</Option>
-                      <Option value="dropdown">Dropdown</Option>
-                      <Option value="text">Text</Option>
-                    </Select>
-                  </div>
-                </div>
-                {question.option.map((option, oIndex) => (
-                  <div key={oIndex} className="flex items-center gap-2">
-                    {question.type === 'multiple_choice' && <IoMdRadioButtonOff className="size-6 text-blue-gray-500 me-1.5" />}
-                    {question.type === 'checkboxes' && <MdCheckBoxOutlineBlank className="size-6 text-blue-gray-500 me-1.5" />}
-                    {question.type === 'dropdown' && <p className="w-5 text-base text-blue-gray-500">{oIndex + 1}.</p>}
-                    {question.type === 'text' && <PiTextAlignLeft className="size-6 text-blue-gray-500 me-1.5" />}
-                    <Inpt value={option.text} onChange={(e) =>
-                      handleOptionChange(qIndex, oIndex, e.target.value)
-                    } label={question.type !== 'text' && `Option ${oIndex + 1}`} variant="standard" disabled={question.type === 'text'} />
-                    <div className={question.type === 'text' && 'hidden'}>
-                      <Tooltip content="Remove" placement="bottom">
-                        <Button onClick={() => deleteOption(qIndex, oIndex)} variant="text" className="p-1.5 rounded-full">
-                          <IoCloseOutline className="size-5 text-blue-gray-500" />
-                        </Button>
-                      </Tooltip>
+            <Card onClick={() => setSelected(0)} className={selected === 0 && "border-2 border-green-500"}>
+              <CardBody className="space-y-4">
+                <Inpt value={survey.title} onChange={(e) => handleChangeHeader("title", e.target.value)} label="Title" variant="standard" />
+                <Textarea value={survey.description} onChange={(e) => handleChangeHeader("description", e.target.value)} label="Description (optional)" color="green" />
+              </CardBody>
+            </Card>
+            {survey.questions.map((question, qIndex) => (
+              <Card ref={el => questionRefs.current[qIndex] = el} onClick={() => setSelected(qIndex + 1)} key={qIndex} className={selected === qIndex + 1 && "border-2 border-green-500"}>
+                <CardBody className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Inpt value={question.text} onChange={(e) => handleChangeQuestion(qIndex, "text", e.target.value)} label={`Question ${qIndex + 1}`} variant="standard" />
+                    <div className="w-fit">
+                      <Select value={question.type} onChange={(val) => handleChangeQuestion(qIndex, "type", val)} label="Type" color="green">
+                        <Option value="radio">Multiple choice</Option>
+                        <Option value="checkbox">Checkboxes</Option>
+                        <Option value="select">Dropdown</Option>
+                        <Option value="input">Text</Option>
+                      </Select>
                     </div>
                   </div>
-                ))}
-                {question.type !== 'text' && (
-                  <Btn onClick={() => addOption(qIndex)} label="Add option" variant="outlined" size="sm" color="green" />
-                )}
-                <hr className="border-blue-gray-200" />
-                <div className="flex justify-end items-center gap-4">
-                  <Tooltip content="Delete question" placement="bottom">
-                    <Button onClick={() => deleteQuestion(qIndex)} variant="text" className="p-2 rounded-full">
-                      <FiTrash2 className="size-5 text-blue-gray-500" />
-                    </Button>
-                  </Tooltip>
-                  <Switch checked={question.required === 1} value={question.required === 1 ? 0 : 1} onChange={(e) => handleQuestionChange(qIndex, "required", e.target.checked ? 1 : 0)} labelProps={{ className: "text-sm" }} label="Required" color="green" />
-                </div>
-              </div>
+                  {question.options.map((option, oIndex) => (
+                    <div key={oIndex} className="flex items-center gap-2">
+                      {question.type === 'radio' && <IoMdRadioButtonOff className="size-6 text-blue-gray-500 me-1.5" />}
+                      {question.type === 'checkbox' && <MdCheckBoxOutlineBlank className="size-6 text-blue-gray-500 me-1.5" />}
+                      {question.type === 'select' && <IoIosArrowDown className="size-6 text-blue-gray-500 me-1.5" />}
+                      {question.type === 'input' && <RxTextAlignLeft className="size-6 text-blue-gray-500 me-1.5" />}
+                      <Inpt value={option.text} onChange={(e) => handleChangeOption(qIndex, oIndex, e.target.value)} label={question.type !== 'input' && `Option ${oIndex + 1}`} variant="standard" disabled={question.type === 'input'} className="disabled:bg-transparent disabled:cursor-default" />
+                      <div className={question.type === 'input' && 'hidden'}>
+                        <Tooltip content="Remove" placement="bottom">
+                          <Button onClick={() => handleRemoveOption(qIndex, oIndex)} variant="text" className="p-1.5 rounded-full">
+                            <IoCloseOutline className="size-5 text-blue-gray-500" />
+                          </Button>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  ))}
+                  {question.type !== 'input' && (
+                    <Btn onClick={() => handleAddOption(qIndex)} label="Add option" variant="outlined" size="sm" color="green" />
+                  )}
+                  <hr className="border-blue-gray-200" />
+                  <div className="flex justify-end items-center gap-4">
+                    <Tooltip content="Delete question" placement="bottom">
+                      <Button onClick={() => handleRemoveQuestion(qIndex)} variant="text" className="p-2 rounded-full">
+                        <FiTrash2 className="size-5 text-blue-gray-500" />
+                      </Button>
+                    </Tooltip>
+                    <Switch checked={question.required === 1} value={question.required === 1 ? 0 : 1} onChange={(e) => handleChangeQuestion(qIndex, "required", e.target.checked ? 1 : 0)} labelProps={{ className: "text-sm" }} label="Required" color="green" />
+                  </div>
+                </CardBody>
+              </Card>
             ))}
             <div className="left-[272px] fixed bottom-0 inset-x-0 flex items-center justify-center">
               <div className="flex items-center justify-center border-t max-w-[736px] w-full p-2 bg-white rounded-t-xl">
                 <Tooltip content="Add question" placement="top">
-                  <Button onClick={addQuestion} variant="text" className="p-2">
+                  <Button onClick={handleAddQuestion} variant="text" className="p-2">
                     <PlusCircleIcon className="size-7 text-blue-gray-500" />
                   </Button>
                 </Tooltip>

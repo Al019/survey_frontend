@@ -30,7 +30,7 @@ const App = () => {
                 <Route path='/admin/dashboard' element={<AdminDashboard />} />
                 <Route path='/admin/enumerators' element={<Enumerator />} />
                 <Route path='/admin/surveys' element={<AdminSurvey />} />
-                <Route path='/admin/surveys/:uuid/edit' element={<AdminForm />} />
+                <Route path='/admin/surveys/create' element={<AdminForm />} />
               </>
             )}
 
