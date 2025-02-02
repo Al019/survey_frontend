@@ -5,7 +5,7 @@ import { Outlet } from "react-router-dom"
 const DefaultLayout = () => {
   return (
     <div>
-      <Card className="fixed h-[calc(100vh)] w-[272px] p-2 overflow-y-scroll rounded-none shadow-none border-0" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <Card className="fixed h-[calc(100vh)] w-[272px] p-2 overflow-y-scroll rounded-none" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         <Navigation />
       </Card>
       <div className="ml-[272px]">

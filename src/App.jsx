@@ -38,7 +38,7 @@ const App = () => {
               <>
                 <Route path='/enumerator/dashboard' element={<EnumeratorDashboard />} />
                 <Route path='/enumerator/surveys' element={<EnumeratorSurvey />} />
-                <Route path='/enumerator/surveys/:uuid/answer' element={<EnumeratorForm />} />
+                <Route path='/enumerator/surveys/:uuid' element={<EnumeratorForm />} />
               </>
             )}
 

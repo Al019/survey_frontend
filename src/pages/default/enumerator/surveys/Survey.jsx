@@ -37,7 +37,7 @@ const Survey = () => {
   }
 
   const handleNavigate = (uuid) => {
-    navigate(`/enumerator/surveys/${uuid}/answer`)
+    navigate(`/enumerator/surveys/${uuid}`)
   }
 
   return (
