@@ -9,6 +9,13 @@ module.exports = withMT({
     fontFamily: {
       sans: ["Poppins", "sans-serif"],
     },
+    screens: {
+      'max-sm': { max: '539px' },
+      'max-md': { max: '719px' },
+      'max-lg': { max: '959px' },
+      'max-xl': { max: '1139px' },
+      'max-2xl': { max: '1319px' },
+    }
   },
   plugins: [],
 });

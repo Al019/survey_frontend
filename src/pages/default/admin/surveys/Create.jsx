@@ -13,31 +13,28 @@ import axios from "../../../../api/axios"
 import { RxTextAlignLeft } from "react-icons/rx";
 import { ScreenLoading } from "../../../../components/Loading"
 
-const tabs = ["Questions", "Responses", "Settings"]
+const tabs = ["Questions", "Settings"]
 
-const Form = () => {
+const Create = () => {
   const [activeTab, setActiveTab] = useState("Questions")
-  const { uuid } = useParams()
   const [selected, setSelected] = useState(1)
   const questionRefs = useRef([])
   const navigate = useNavigate()
   const [btnLoading, setBtnLoading] = useState(false)
-  const [survey, setSurvey] = useState({
-    title: "Untitled form",
-    description: "",
-    questions: [
-      {
-        text: "Untitled question",
-        type: "radio",
-        required: 0,
-        options: [
-          {
-            text: "Question option"
-          }
-        ]
-      }
-    ]
+  const [survey, setSurvey] = useState(() => {
+    const savedSurvey = localStorage.getItem("create-survey");
+    return savedSurvey ? JSON.parse(savedSurvey) : {
+      title: "Untitled Form",
+      description: "",
+      questions: [
+        { text: "Untitled Question", type: "radio", required: 0, options: [{ text: "Question option" }] }
+      ],
+    }
   })
+
+  useEffect(() => {
+    localStorage.setItem("create-survey", JSON.stringify(survey))
+  }, [survey])
 
   const handleChangeHeader = (field, value) => {
     setSurvey({ ...survey, [field]: value })
@@ -127,11 +124,19 @@ const Form = () => {
     setSurvey({ ...survey, questions: updatedQuestions })
   }
 
+  const handleToggleRequired = (checked) => {
+    setSurvey((prev) => ({
+      ...prev,
+      questions: prev.questions.map((q) => ({ ...q, required: checked ? 1 : 0 })),
+    }))
+  }
+
   const handlePublish = async () => {
     setBtnLoading(true)
     await axios.post('/api/survey/create-survey', { uuid: uuidv4(), survey })
       .then(() => {
-        navigate(-1)
+        navigate('/admin/surveys')
+        localStorage.removeItem("create-survey")
       })
       .finally(() => {
         setBtnLoading(false)
@@ -141,18 +146,20 @@ const Form = () => {
   return (
     <div>
       <Tabs value={activeTab}>
-        <div className="h-[100px] px-4 pt-4 z-10 fixed left-[272px] flex flex-col justify-between right-0 top-0 bg-white border-b">
-          <div className="grid grid-cols-2 items-center">
+        <div className="h-[100px] px-4 pt-4 z-10 lg:fixed left-[272px] flex flex-col justify-between right-0 top-0 bg-white border-b">
+          <div className="grid grid-cols-2 items-center h-10">
             <h1 className="text-lg font-medium">
               {survey.title}
             </h1>
-            <div className="flex justify-end">
-              <Btn onClick={handlePublish} label="Publish" color="blue" />
-            </div>
+            {activeTab === 'Questions' && (
+              <div className="flex justify-end">
+                <Btn onClick={handlePublish} label="Publish" color="blue" />
+              </div>
+            )}
           </div>
           <div className="flex justify-center">
             <TabsHeader
-              className="w-fit space-x-6 rounded-none border-b border-blue-gray-50 bg-transparent p-0"
+              className="z-0 w-fit space-x-6 rounded-none border-b border-blue-gray-50 bg-transparent p-0"
               indicatorProps={{
                 className:
                   "bg-transparent border-b-2 border-green-500 shadow-none rounded-none",
@@ -171,17 +178,17 @@ const Form = () => {
             </TabsHeader>
           </div>
         </div>
-        <div className="mt-[100px] max-w-3xl mx-auto">
+        <div className="lg:mt-[100px] max-w-3xl mx-auto">
           <TabsBody>
             <TabPanel value="Questions" className="space-y-4 pb-40">
-              <Card onClick={() => setSelected(0)} className={selected === 0 && "border-2 border-green-500"}>
+              <Card onClick={() => setSelected(0)} className={`shadow-none ${selected === 0 && "border-2 border-green-500"}`}>
                 <CardBody className="space-y-4">
                   <Inpt value={survey.title} onChange={(e) => handleChangeHeader("title", e.target.value)} label="Title" variant="standard" />
                   <Textarea value={survey.description} onChange={(e) => handleChangeHeader("description", e.target.value)} label="Description (optional)" color="green" />
                 </CardBody>
               </Card>
               {survey.questions.map((question, qIndex) => (
-                <Card ref={el => questionRefs.current[qIndex] = el} onClick={() => setSelected(qIndex + 1)} key={qIndex} className={selected === qIndex + 1 && "border-2 border-green-500"}>
+                <Card ref={el => questionRefs.current[qIndex] = el} onClick={() => setSelected(qIndex + 1)} key={qIndex} className={`shadow-none ${selected === qIndex + 1 && "border-2 border-green-500"}`}>
                   <CardBody className="space-y-4">
                     <div className="flex items-center gap-4">
                       <Inpt value={question.text} onChange={(e) => handleChangeQuestion(qIndex, "text", e.target.value)} label={`Question ${qIndex + 1}`} variant="standard" />
@@ -200,10 +207,10 @@ const Form = () => {
                         {question.type === 'checkbox' && <MdCheckBoxOutlineBlank className="size-6 text-blue-gray-500 me-1.5" />}
                         {question.type === 'select' && <IoIosArrowDown className="size-6 text-blue-gray-500 me-1.5" />}
                         {question.type === 'input' && <RxTextAlignLeft className="size-6 text-blue-gray-500 me-1.5" />}
-                        <Inpt value={option.text} onChange={(e) => handleChangeOption(qIndex, oIndex, e.target.value)} label={question.type !== 'input' && `Option ${oIndex + 1}`} variant="standard" disabled={question.type === 'input'} className="disabled:bg-transparent disabled:cursor-default" />
+                        <Inpt value={option.text} onChange={(e) => handleChangeOption(qIndex, oIndex, e.target.value)} label={question.type !== 'input' && `Option ${oIndex + 1}`} variant="standard" disabled={question.type === 'input'} className="disabled:bg-transparent" />
                         <div className={question.type === 'input' && 'hidden'}>
                           <Tooltip content="Remove" placement="bottom">
-                            <Button onClick={() => handleRemoveOption(qIndex, oIndex)} variant="text" className="p-1.5 rounded-full">
+                            <Button onClick={() => handleRemoveOption(qIndex, oIndex)} variant="text" className="p-1.5 rounded-full" tabIndex={-1}>
                               <IoCloseOutline className="size-5 text-blue-gray-500" />
                             </Button>
                           </Tooltip>
@@ -225,8 +232,8 @@ const Form = () => {
                   </CardBody>
                 </Card>
               ))}
-              <div className="left-[272px] fixed bottom-0 inset-x-0 flex items-center justify-center">
-                <Card className="flex items-center justify-center border-t max-w-[736px] w-full p-2 rounded-none rounded-t-xl">
+              <div className="lg:left-[272px] fixed bottom-0 inset-x-0 flex items-center justify-center">
+                <Card className="mx-4 shadow-none flex items-center justify-center border-t max-w-[736px] w-full p-2 rounded-none rounded-t-xl">
                   <Tooltip content="Add question" placement="top">
                     <Button onClick={handleAddQuestion} variant="text" className="p-2">
                       <PlusCircleIcon className="size-7 text-blue-gray-500" />
@@ -234,6 +241,25 @@ const Form = () => {
                   </Tooltip>
                 </Card>
               </div>
+            </TabPanel>
+            <TabPanel value="Settings" className="space-y-4">
+              <Card className="shadow-none">
+                <CardBody className="space-y-4">
+                  <h1 className="font-medium">Settings</h1>
+                  <hr className="border-blue-gray-200" />
+                  <div className="flex justify-between items-center">
+                    <div className="space-y-1">
+                      <h1 className="font-normal text-sm">Required</h1>
+                      <p className="text-xs font-normal">All questions are required.</p>
+                    </div>
+                    <Switch
+                      color="green"
+                      checked={survey.questions.every(q => q.required === 1)}
+                      onChange={(e) => handleToggleRequired(e.target.checked)}
+                    />
+                  </div>
+                </CardBody>
+              </Card>
             </TabPanel>
           </TabsBody>
         </div>
@@ -244,4 +270,4 @@ const Form = () => {
   )
 }
 
-export default Form
+export default Create

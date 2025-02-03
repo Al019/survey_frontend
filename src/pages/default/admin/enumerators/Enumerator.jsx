@@ -64,9 +64,9 @@ const Enumerator = () => {
 
   return (
     <div>
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-4 max-sm:space-y-2 max-sm:p-2">
         <div className="flex justify-end">
-          <Btn onClick={handleOpen} label="Add" color="green" icon={<PlusCircleIcon className="size-6" />} />
+          <Btn onClick={handleOpen} label="Add" color="green" />
         </div>
         <Tbl title="Enumerators" data={data} loading={loading} />
       </div>

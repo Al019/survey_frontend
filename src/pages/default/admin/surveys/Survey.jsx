@@ -11,7 +11,7 @@ const Survey = () => {
   const navigate = useNavigate()
   const [btnLoading, setBtnLoading] = useState(false)
   const [surveys, setSurveys] = useState([])
-  const formatDate = (date) => new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+  const formatDateTime = (date) => new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric" })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -22,7 +22,7 @@ const Survey = () => {
             id: survey.id,
             uuid: survey.uuid,
             title: survey.title,
-            created_at: formatDate(survey.created_at)
+            created_at: formatDateTime(survey.created_at)
           }))
           setSurveys(formattedSurveys)
         })
@@ -42,7 +42,7 @@ const Survey = () => {
   }
 
   const handleNavigate = (uuid) => {
-    navigate(`/admin/surveys/${uuid}/edit`)
+    navigate(`/admin/surveys/${uuid}`)
   }
 
   return (
@@ -50,7 +50,7 @@ const Survey = () => {
       <ScreenLoading loading={btnLoading} />
       <div className="p-4 space-y-4">
         <div className="flex justify-end">
-          <Btn onClick={() => navigate(`/admin/surveys/create`)} label="Create" color="green" icon={<PlusCircleIcon className="size-6" />} />
+          <Btn onClick={() => navigate(`/admin/surveys/create`)} label="Create" color="green" />
         </div>
         <Tbl title="Surveys" data={data} idKey="uuid" onClickView={handleNavigate} loading={loading} />
       </div>

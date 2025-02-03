@@ -55,7 +55,7 @@ const Tbl = ({ title, data, onClickView, idKey, onClickEdit, loading }) => {
   }
 
   return (
-    <Card>
+    <Card className="shadow-none">
       <CardBody className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex flex-col text-sm font-medium">
