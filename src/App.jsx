@@ -11,6 +11,7 @@ import EnumeratorDashboard from "./pages/default/enumerator/dashboard/Dashboard"
 import EnumeratorSurvey from "./pages/default/enumerator/surveys/Survey"
 import EnumeratorForm from "./pages/default/enumerator/surveys/Form"
 import View from "./pages/default/admin/surveys/View"
+import Information from "./pages/default/admin/enumerators/Information"
 
 const App = () => {
   const { user } = useAuthContext()
@@ -30,6 +31,7 @@ const App = () => {
               <>
                 <Route path='/admin/dashboard' element={<AdminDashboard />} />
                 <Route path='/admin/enumerators' element={<Enumerator />} />
+                <Route path='/admin/enumerators/:enumerator_id' element={<Information />} />
                 <Route path='/admin/surveys' element={<AdminSurvey />} />
                 <Route path='/admin/surveys/create' element={<Create />} />
                 <Route path='/admin/surveys/:uuid' element={<View />} />

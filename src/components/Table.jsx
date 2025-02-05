@@ -70,7 +70,7 @@ const Tbl = ({ title, data, onClickView, idKey, onClickEdit, loading }) => {
           {loading ? (
             <div className="flex items-center justify-center gap-2 h-10">
               <Spinner color="green" />
-              <h1>Loading data</h1>
+              <h1>Loading {title}</h1>
             </div>
           ) : (
             <table className="w-full table-auto text-left">

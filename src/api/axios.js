@@ -1,7 +1,7 @@
 import axiosClient from "axios"
 
 const axios = axiosClient.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: 'http://localhost:8000',
   withCredentials: true,
   withXSRFToken: true,
 })

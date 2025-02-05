@@ -1,10 +1,10 @@
 import { Navigate, Outlet } from "react-router-dom"
 import { useAuthContext } from "../contexts/AuthContext"
-import { Card, CardBody } from "@material-tailwind/react"
+import { Alert, Card, CardBody } from "@material-tailwind/react"
 import Logo from '../assets/images/logo.png'
 
 const AuthLayout = () => {
-  const { user } = useAuthContext()
+  const { user, error } = useAuthContext()
 
   if (user?.role === 'admin') {
     return <Navigate to="/admin/dashboard" />
@@ -19,6 +19,13 @@ const AuthLayout = () => {
           <div className="flex justify-center items-center">
             <img src={Logo} className="object-contain size-20" />
           </div>
+          {error.message && (
+            <Alert variant="ghost" color="red">
+              <span className="text-sm">
+                {error.message}
+              </span>
+            </Alert>
+          )}
           <Outlet />
         </CardBody>
       </Card>

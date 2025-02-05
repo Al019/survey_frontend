@@ -5,19 +5,20 @@ import { useNavigate } from "react-router-dom"
 
 const Survey = () => {
   const [surveys, setSurveys] = useState([])
-  const formatDate = (date) => new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+  const formatDateTime = (date) => new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric" })
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const getSurvey = async () => {
-      await axios.get('/api/enumerator/get-survey')
+      await axios.get('/api/survey/get-survey')
         .then(({ data }) => {
           const formattedSurveys = data.map((survey) => ({
             id: survey.id,
             uuid: survey.uuid,
             title: survey.title,
-            created_at: formatDate(survey.created_at)
+            reponse: survey.limit !== null ? `${survey.response_count} / ${survey.limit}` : survey.response_count,
+            created_at: formatDateTime(survey.created_at)
           }))
           setSurveys(formattedSurveys)
         })
@@ -31,6 +32,7 @@ const Survey = () => {
   const data = {
     theads: [
       "Title",
+      "Total Response",
       "Date Created",
     ],
     tbodies: surveys

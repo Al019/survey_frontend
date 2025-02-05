@@ -21,11 +21,13 @@ const Create = () => {
   const questionRefs = useRef([])
   const navigate = useNavigate()
   const [btnLoading, setBtnLoading] = useState(false)
+  const [switchLimit, setSwitchLimit] = useState(false)
   const [survey, setSurvey] = useState(() => {
     const savedSurvey = localStorage.getItem("create-survey");
     return savedSurvey ? JSON.parse(savedSurvey) : {
       title: "Untitled Form",
       description: "",
+      limit: "",
       questions: [
         { text: "Untitled Question", type: "radio", required: 0, options: [{ text: "Question option" }] }
       ],
@@ -153,7 +155,7 @@ const Create = () => {
             </h1>
             {activeTab === 'Questions' && (
               <div className="flex justify-end">
-                <Btn onClick={handlePublish} label="Publish" color="blue" />
+                <Btn onClick={handlePublish} label="Publish" color="green" />
               </div>
             )}
           </div>
@@ -180,16 +182,16 @@ const Create = () => {
         </div>
         <div className="lg:mt-[100px] max-w-3xl mx-auto">
           <TabsBody>
-            <TabPanel value="Questions" className="space-y-4 pb-40">
+            <TabPanel value="Questions" className="space-y-4 pb-40 max-sm:space-y-2 max-sm:p-2">
               <Card onClick={() => setSelected(0)} className={`shadow-none ${selected === 0 && "border-2 border-green-500"}`}>
-                <CardBody className="space-y-4">
+                <CardBody className="space-y-4 max-sm:p-4">
                   <Inpt value={survey.title} onChange={(e) => handleChangeHeader("title", e.target.value)} label="Title" variant="standard" />
                   <Textarea value={survey.description} onChange={(e) => handleChangeHeader("description", e.target.value)} label="Description (optional)" color="green" />
                 </CardBody>
               </Card>
               {survey.questions.map((question, qIndex) => (
                 <Card ref={el => questionRefs.current[qIndex] = el} onClick={() => setSelected(qIndex + 1)} key={qIndex} className={`shadow-none ${selected === qIndex + 1 && "border-2 border-green-500"}`}>
-                  <CardBody className="space-y-4">
+                  <CardBody className="space-y-4 max-sm:p-4">
                     <div className="flex items-center gap-4">
                       <Inpt value={question.text} onChange={(e) => handleChangeQuestion(qIndex, "text", e.target.value)} label={`Question ${qIndex + 1}`} variant="standard" />
                       <div className="w-fit">
@@ -233,7 +235,7 @@ const Create = () => {
                 </Card>
               ))}
               <div className="lg:left-[272px] fixed bottom-0 inset-x-0 flex items-center justify-center">
-                <Card className="mx-4 shadow-none flex items-center justify-center border-t max-w-[736px] w-full p-2 rounded-none rounded-t-xl">
+                <Card className="mx-4 max-sm:mx-2 shadow-none flex items-center justify-center border-t max-w-[736px] w-full p-2 rounded-none rounded-t-xl">
                   <Tooltip content="Add question" placement="top">
                     <Button onClick={handleAddQuestion} variant="text" className="p-2">
                       <PlusCircleIcon className="size-7 text-blue-gray-500" />
@@ -242,9 +244,9 @@ const Create = () => {
                 </Card>
               </div>
             </TabPanel>
-            <TabPanel value="Settings" className="space-y-4">
+            <TabPanel value="Settings" className="space-y-4 max-sm:p-2">
               <Card className="shadow-none">
-                <CardBody className="space-y-4">
+                <CardBody className="space-y-4 max-sm:p-4">
                   <h1 className="font-medium">Settings</h1>
                   <hr className="border-blue-gray-200" />
                   <div className="flex justify-between items-center">
@@ -257,6 +259,29 @@ const Create = () => {
                       checked={survey.questions.every(q => q.required === 1)}
                       onChange={(e) => handleToggleRequired(e.target.checked)}
                     />
+                  </div>
+                  <hr className="border-blue-gray-200" />
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <div className="space-y-1">
+                        <h1 className="font-normal text-sm">Limit</h1>
+                        <p className="text-xs font-normal">Customize limit of responses.</p>
+                      </div>
+                      <Switch
+                        color="green"
+                        checked={switchLimit || (!!survey.limit && survey.limit !== "")}
+                        onChange={(e) => {
+                          const isChecked = e.target.checked
+                          setSwitchLimit(isChecked)
+                          if (!isChecked) {
+                            handleChangeHeader("limit", "")
+                          }
+                        }}
+                      />
+                    </div>
+                    {switchLimit && (
+                      <Inpt value={survey.limit} onChange={(e) => handleChangeHeader("limit", e.target.value)} variant="standard" type="number" />
+                    )}
                   </div>
                 </CardBody>
               </Card>

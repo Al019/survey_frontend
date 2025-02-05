@@ -6,7 +6,7 @@ const auth = createContext({})
 
 export const AuthContext = ({ children }) => {
   const [user, setUser] = useState(null)
-  const [errors, setErrors] = useState([])
+  const [error, setError] = useState({})
   const [webLoading, setWebLoading] = useState(true)
   const [btnLoading, setBtnLoading] = useState(false)
 
@@ -27,7 +27,7 @@ export const AuthContext = ({ children }) => {
   }
 
   const login = async (formData) => {
-    setErrors([])
+    setError([])
     setBtnLoading(true)
     await csrf()
     await axios.post("/login", formData)
@@ -36,9 +36,7 @@ export const AuthContext = ({ children }) => {
       })
       .catch((error) => {
         const response = error.response
-        if (response.data.errors) {
-          setErrors(response.data.errors)
-        }
+        setError(response.data)
       })
       .finally(() => {
         setBtnLoading(false)
@@ -55,7 +53,7 @@ export const AuthContext = ({ children }) => {
   if (webLoading) return <WebLoading />
 
   return (
-    <auth.Provider value={{ user, errors, btnLoading, login, logout }}>
+    <auth.Provider value={{ user, error, btnLoading, login, logout }}>
       {children}
     </auth.Provider>
   )

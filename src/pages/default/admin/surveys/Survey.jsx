@@ -22,6 +22,7 @@ const Survey = () => {
             id: survey.id,
             uuid: survey.uuid,
             title: survey.title,
+            reponse: survey.limit !== null ? `${survey.response_count} / ${survey.limit}` : survey.response_count,
             created_at: formatDateTime(survey.created_at)
           }))
           setSurveys(formattedSurveys)
@@ -36,6 +37,7 @@ const Survey = () => {
   const data = {
     theads: [
       "Title",
+      "Total Responses",
       "Date Created",
     ],
     tbodies: surveys

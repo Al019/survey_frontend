@@ -178,7 +178,7 @@ const View = () => {
       <div className="lg:mt-[100px] max-w-3xl mx-auto">
         <TabsBody>
           <TabPanel value="Questions" className="space-y-4 pb-40">
-            <Card>
+            <Card className="shadow-none">
               <CardBody className="space-y-4">
                 <Inpt value={survey.title} label="Title" variant="standard" />
                 <Textarea value={survey.description} label="Description (optional)" color="green" />
@@ -290,11 +290,13 @@ const View = () => {
                         <div className="space-y-2">
                           {response.map((res, resIndex) => {
                             const answer = res.answer.find(ans => ans.question_id === question.id);
-                            return (
-                              <p key={resIndex} className="text-sm font-normal p-2 bg-gray-100 rounded-md">
-                                {answer.text}
-                              </p>
-                            )
+                            if (answer) {
+                              return (
+                                <p key={resIndex} className="text-sm font-normal p-2 bg-gray-100 rounded-md">
+                                  {answer.text}
+                                </p>
+                              )
+                            }
                           })}
                         </div>
                       )}
