@@ -13,9 +13,9 @@ const AuthLayout = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 max-sm:p-2">
       <Card className="w-full max-w-sm">
-        <CardBody className="space-y-6">
+        <CardBody className="space-y-6 max-sm:p-4">
           <div className="flex justify-center items-center">
             <img src={Logo} className="object-contain size-20" />
           </div>

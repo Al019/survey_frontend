@@ -6,7 +6,7 @@ import User from '../assets/images/user.png'
 import { useLocation, useNavigate } from "react-router-dom"
 import { useAuthContext } from "../contexts/AuthContext"
 
-const Navigation = () => {
+const Navigation = ({ setDrawerOpen }) => {
   const [open, setOpen] = useState(0)
   const navigate = useNavigate()
   const route = useLocation()
@@ -61,6 +61,7 @@ const Navigation = () => {
           <div className="space-y-2">
             <ListItem onClick={() => {
               navigate(`/admin/dashboard`)
+              setDrawerOpen(false)
             }} className={`focus:bg-green-500 focus:text-white ${route.pathname === `/admin/dashboard` && 'bg-green-500 text-white hover:bg-green-500 hover:text-white'}`}>
               <ListItemPrefix>
                 <PresentationChartLineIcon className="h-5 w-5" />
@@ -69,6 +70,7 @@ const Navigation = () => {
             </ListItem>
             <ListItem onClick={() => {
               navigate(`/admin/enumerators`)
+              setDrawerOpen(false)
             }} className={`focus:bg-green-500 focus:text-white ${route.pathname === `/admin/enumerators` && 'bg-green-500 text-white hover:bg-green-500 hover:text-white'}`}>
               <ListItemPrefix>
                 <UsersIcon className="h-5 w-5" />
@@ -77,6 +79,7 @@ const Navigation = () => {
             </ListItem>
             <ListItem onClick={() => {
               navigate(`/admin/surveys`)
+              setDrawerOpen(false)
             }} className={`focus:bg-green-500 focus:text-white ${route.pathname === `/admin/surveys` && 'bg-green-500 text-white hover:bg-green-500 hover:text-white'}`}>
               <ListItemPrefix>
                 <DocumentDuplicateIcon className="h-5 w-5" />
@@ -89,6 +92,7 @@ const Navigation = () => {
           <div className="space-y-2">
             <ListItem onClick={() => {
               navigate(`/enumerator/dashboard`)
+              setDrawerOpen(false)
             }} className={`focus:bg-green-500 focus:text-white ${route.pathname === `/enumerator/dashboard` && 'bg-green-500 text-white hover:bg-green-500 hover:text-white'}`}>
               <ListItemPrefix>
                 <PresentationChartLineIcon className="h-5 w-5" />
@@ -97,6 +101,7 @@ const Navigation = () => {
             </ListItem>
             <ListItem onClick={() => {
               navigate(`/enumerator/surveys`)
+              setDrawerOpen(false)
             }} className={`focus:bg-green-500 focus:text-white ${route.pathname === `/enumerator/surveys` && 'bg-green-500 text-white hover:bg-green-500 hover:text-white'}`}>
               <ListItemPrefix>
                 <DocumentDuplicateIcon className="h-5 w-5" />

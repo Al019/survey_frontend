@@ -31,7 +31,8 @@ const Enumerator = () => {
           last_name: enumerator.last_name,
           first_name: enumerator.first_name,
           middle_name: enumerator.middle_name,
-          email: enumerator.email
+          email: enumerator.email,
+          status: enumerator.status
         }))
         setEnumerators(formattedEnumerators)
       })
@@ -58,6 +59,7 @@ const Enumerator = () => {
       "First Name",
       "Middle Name",
       "Email Address",
+      "Status"
     ],
     tbodies: enumerators
   }

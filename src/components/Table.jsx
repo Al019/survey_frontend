@@ -56,7 +56,7 @@ const Tbl = ({ title, data, onClickView, idKey, onClickEdit, loading }) => {
 
   return (
     <Card className="shadow-none">
-      <CardBody className="space-y-6">
+      <CardBody className="space-y-6 max-sm:p-4">
         <div className="flex items-center justify-between">
           <div className="flex flex-col text-sm font-medium">
             <span>List of {title}</span>
@@ -98,11 +98,9 @@ const Tbl = ({ title, data, onClickView, idKey, onClickEdit, loading }) => {
                         {firstIndex + recordIndex + 1}
                       </td>
                       {Object.entries(displayData).map(([key, body], bodyIndex) => (
-                        <td key={bodyIndex} className={`p-4 font-normal text-sm whitespace-nowrap ${key === "role" && 'capitalize'}`}>
+                        <td key={bodyIndex} className={`p-4 font-normal text-sm whitespace-nowrap`}>
                           {key === "status" ? (
-                            <Chip color={body === 'publish' ? 'blue' : 'orange'} value={body} variant="ghost" className="w-fit" />
-                          ) : key === "submit_status" ? (
-                            <Chip color={body === 'pending' && 'yellow' || body === 'review' && 'orange' || body === 'confirm' && 'green' || body === 'resubmit' && 'red'} value={body} variant="ghost" className="w-fit" />
+                            <Chip color={body === 'active' ? 'green' : 'red'} value={body} variant="ghost" className="w-fit" />
                           ) : body === null ? (
                             "-"
                           ) : (

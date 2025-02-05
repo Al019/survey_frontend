@@ -11,6 +11,8 @@ import axios from "../../../../api/axios"
 import { RxTextAlignLeft } from "react-icons/rx";
 import { ScreenLoading } from "../../../../components/Loading"
 import Chart from "react-apexcharts"
+import { ArrowDownTrayIcon } from "@heroicons/react/24/outline"
+import * as XLSX from "xlsx"
 
 const tabs = ["Questions", "Responses"]
 const colors = ["#f44336", "#4caf50", "#2196f3", "#ff9800", "#3f51b5"]
@@ -32,7 +34,7 @@ const View = () => {
   }, [uuid])
 
   const getSurvey = async () => {
-    await axios.get('/api/survey/get-survey-uestionnaire', {
+    await axios.get('/api/survey/get-survey-questionnaire', {
       params: { uuid }
     })
       .then(({ data }) => {
@@ -64,7 +66,7 @@ const View = () => {
         show: "",
       },
       dataLabels: {
-        enabled: false,
+        enabled: true,
       },
       colors: colors,
       legend: {
@@ -75,31 +77,70 @@ const View = () => {
   })
 
   const calculateResponseData = (question) => {
+    // Initialize option counts based on option IDs
     const optionCounts = question.option.map(opt => ({
+      id: opt.id, // Use option ID instead of text
       text: opt.text,
       count: 0,
-    }))
+    }));
 
+    // Iterate through responses and count selected options
     response.forEach(res => {
       res.answer.forEach(ans => {
         if (ans.question_id === question.id) {
-          const selectedOptions = ans.text.split(", ").map(opt => opt.trim())
-          selectedOptions.forEach(selectedOption => {
-            const option = optionCounts.find(opt => opt.text === selectedOption)
+          // Get the selected option IDs from the answer
+          const selectedOptionIds = ans.answer_option.map(ao => ao.option_id);
+
+          // Update counts based on option IDs
+          selectedOptionIds.forEach(optionId => {
+            const option = optionCounts.find(opt => opt.id === optionId);
             if (option) {
-              option.count += 1
+              option.count += 1;
             }
-          })
+          });
         }
-      })
-    })
+      });
+    });
 
-    const totalResponses = optionCounts.reduce((sum, opt) => sum + opt.count, 0)
-    const series = optionCounts.map(opt => opt.count)
-    const labels = optionCounts.map(opt => opt.text)
+    // Calculate total responses
+    const totalResponses = optionCounts.reduce((sum, opt) => sum + opt.count, 0);
 
-    return { series, labels, totalResponses }
+    // Prepare data for the pie chart
+    const series = optionCounts.map(opt => opt.count);
+    const labels = optionCounts.map(opt => opt.text);
+
+    return { series, labels, totalResponses };
   }
+
+  const exportToExcel = () => {
+    // Prepare data for the Excel file
+    const data = [];
+
+    // Add headers
+    const headers = ["Question", "Response"];
+    data.push(headers);
+
+    // Add rows for each question and response
+    survey.question?.forEach((question) => {
+      response.forEach((res) => {
+        const answer = res.answer.find((ans) => ans.question_id === question.id);
+        if (answer) {
+          const row = [question.text, answer.text];
+          data.push(row);
+        }
+      });
+    });
+
+    // Create a worksheet
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+
+    // Create a workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Responses");
+
+    // Export the workbook to an Excel file
+    XLSX.writeFile(workbook, `Survey_Responses_${uuid}.xlsx`);
+  };
 
   if (loading) {
     return <ScreenLoading loading={loading} />
@@ -189,9 +230,9 @@ const View = () => {
               </Card>
             ))}
           </TabPanel>
-          <TabPanel value="Responses">
+          <TabPanel value="Responses" className="max-sm:p-2">
             <Card className="shadow-none">
-              <CardBody className="space-y-4">
+              <CardBody className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <h1 className="font-medium">
                     {response.length}
@@ -200,38 +241,49 @@ const View = () => {
                     {response.length > 1 ? 'Responses' : 'Response'}
                   </p>
                 </div>
+                {response.length > 0 && (
+                  <Btn onClick={exportToExcel} label="Export" icon={<ArrowDownTrayIcon className="size-4" />} variant="outlined" color="green" />
+                )}
               </CardBody>
             </Card>
-            {response.length >= 1 && (
-              <div className="mt-4 space-y-4">
+            {response.length > 0 && (
+              <div className="mt-4 space-y-4 max-sm:space-y-2 max-sm:mt-2">
                 {survey.question?.map((question, qIndex) => (
-                  <Card key={qIndex} className="shadow-none">
+                  <Card key={qIndex} className="shadow-none max-h-[340px] overflow-y-auto">
                     <CardBody className="space-y-6">
                       <div className="space-y-3">
                         <span className="text-xs font-normal">Question {qIndex + 1}</span>
                         <h1 className="text-sm font-medium">{question.text}</h1>
                       </div>
                       {(question.type === 'radio' || question.type === 'select' || question.type === 'checkbox') && (
-                        <div className="grid grid-cols-2 place-items-center">
+                        <div>
                           {(() => {
-                            const { series, labels } = calculateResponseData(question);
+                            const { series, labels } = calculateResponseData(question)
                             return (
-                              <Chart {...pieChartConfig(series, labels)} />
-                            );
-                          })()}
-                          <div className="space-y-2">
-                            {question.option.map((option, oIndex) => (
-                              <div key={oIndex} className="flex items-center gap-2">
-                                <div
-                                  style={{ backgroundColor: colors[oIndex] }}
-                                  className="size-4 rounded-full"
-                                ></div>
-                                <p className="text-xs font-normal">
-                                  {option.text}
-                                </p>
+                              <div className="grid grid-cols-2 place-items-center max-sm:grid-cols-1">
+                                <Chart {...pieChartConfig(series, labels)} />
+                                <div className="space-y-2">
+                                  {question.option.map((option, oIndex) => {
+                                    const count = series[oIndex]
+                                    return (
+                                      <div key={oIndex} className="flex items-center gap-2">
+                                        <div
+                                          style={{ backgroundColor: colors[oIndex] }}
+                                          className="size-4 rounded-full"
+                                        ></div>
+                                        <p className="text-sm font-normal">
+                                          {option.text}
+                                        </p>
+                                        <span className="text-sm font-normal">
+                                          {`(${count})`}
+                                        </span>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
                               </div>
-                            ))}
-                          </div>
+                            )
+                          })()}
                         </div>
                       )}
                       {question.type === 'input' && (

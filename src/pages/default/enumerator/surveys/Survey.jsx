@@ -41,7 +41,7 @@ const Survey = () => {
   }
 
   return (
-    <div className="p-4">
+    <div className="p-4 max-sm:p-2">
       <Tbl title="Surveys" data={data} idKey="uuid" onClickView={handleNavigate} loading={loading} />
     </div>
   )

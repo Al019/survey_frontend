@@ -19,6 +19,13 @@ const Form = () => {
   const [response, setResponse] = useState([])
   const [validationErrors, setValidationErrors] = useState([])
 
+  useEffect(() => {
+    const savedAnswers = localStorage.getItem(`answers_${uuid}`)
+    if (savedAnswers) {
+      setAnswer(JSON.parse(savedAnswers))
+    }
+  }, [uuid])
+
   const pieChartConfig = (series, labels) => ({
     type: "pie",
     width: 200,
@@ -34,7 +41,7 @@ const Form = () => {
         show: "",
       },
       dataLabels: {
-        enabled: false,
+        enabled: true,
       },
       colors: colors,
       legend: {
@@ -45,31 +52,40 @@ const Form = () => {
   })
 
   const calculateResponseData = (question) => {
+    // Initialize option counts based on option IDs
     const optionCounts = question.option.map(opt => ({
+      id: opt.id, // Use option ID instead of text
       text: opt.text,
       count: 0,
-    }))
+    }));
 
+    // Iterate through responses and count selected options
     response.forEach(res => {
       res.answer.forEach(ans => {
         if (ans.question_id === question.id) {
-          const selectedOptions = ans.text.split(", ").map(opt => opt.trim())
-          selectedOptions.forEach(selectedOption => {
-            const option = optionCounts.find(opt => opt.text === selectedOption)
+          // Get the selected option IDs from the answer
+          const selectedOptionIds = ans.answer_option.map(ao => ao.option_id);
+
+          // Update counts based on option IDs
+          selectedOptionIds.forEach(optionId => {
+            const option = optionCounts.find(opt => opt.id === optionId);
             if (option) {
-              option.count += 1
+              option.count += 1;
             }
-          })
+          });
         }
-      })
-    })
+      });
+    });
 
-    const totalResponses = optionCounts.reduce((sum, opt) => sum + opt.count, 0)
-    const series = optionCounts.map(opt => opt.count)
-    const labels = optionCounts.map(opt => opt.text)
+    // Calculate total responses
+    const totalResponses = optionCounts.reduce((sum, opt) => sum + opt.count, 0);
 
-    return { series, labels, totalResponses }
-  }
+    // Prepare data for the pie chart
+    const series = optionCounts.map(opt => opt.count);
+    const labels = optionCounts.map(opt => opt.text);
+
+    return { series, labels, totalResponses };
+  };
 
   useEffect(() => {
     getSurvey()
@@ -77,7 +93,7 @@ const Form = () => {
   }, [uuid])
 
   const getSurvey = async () => {
-    await axios.get('/api/survey/get-survey-uestionnaire', {
+    await axios.get('/api/survey/get-survey-questionnaire', {
       params: { uuid }
     })
       .then(({ data }) => {
@@ -97,7 +113,7 @@ const Form = () => {
   const handleAnswerChange = (questionId, option) => {
     setAnswer((prev) => {
       const updatedAnswers = prev.filter((item) => item.questionId !== questionId)
-      return [
+      const newAnswers = [
         ...updatedAnswers,
         {
           questionId,
@@ -105,6 +121,9 @@ const Form = () => {
           option: [{ optionId: option.id }],
         },
       ]
+
+      localStorage.setItem(`answers_${uuid}`, JSON.stringify(newAnswers))
+      return newAnswers
     })
   }
 
@@ -130,14 +149,15 @@ const Form = () => {
         updatedAnswers = updatedAnswers.filter((item) => item.questionId !== questionId)
       }
 
+      localStorage.setItem(`answers_${uuid}`, JSON.stringify(updatedAnswers))
       return updatedAnswers
     })
   }
 
   const handleInputChange = (questionId, option, value) => {
     setAnswer((prev) => {
-      const updatedAnswers = prev.filter((item) => item.questionId !== questionId);
-      return [
+      const updatedAnswers = prev.filter((item) => item.questionId !== questionId)
+      const newAnswers = [
         ...updatedAnswers,
         {
           questionId,
@@ -145,6 +165,9 @@ const Form = () => {
           option: [{ optionId: option.id }],
         },
       ]
+
+      localStorage.setItem(`answers_${uuid}`, JSON.stringify(newAnswers))
+      return newAnswers
     })
   }
 
@@ -161,6 +184,8 @@ const Form = () => {
     await axios.post('/api/enumerator/submit-survey', { uuid, answer })
       .then(() => {
         getResponse()
+        localStorage.removeItem(`answers_${uuid}`)
+        setAnswer([])
       })
       .finally(() => {
         setBtnLoading(false)
@@ -170,7 +195,7 @@ const Form = () => {
   return (
     <div>
       <Tabs value={activeTab}>
-        <div className="h-[100px] px-4 pt-4 z-10 fixed left-[272px] flex flex-col justify-between right-0 top-0 bg-white border-b">
+        <div className="h-[100px] px-4 pt-4 lg:z-10 lg:fixed left-[272px] flex flex-col justify-between right-0 top-0 bg-white border-b">
           <div className="grid grid-cols-2 items-center h-10">
             <h1 className="text-lg font-medium">
               {survey.title}
@@ -183,7 +208,7 @@ const Form = () => {
           </div>
           <div className="flex justify-center">
             <TabsHeader
-              className="w-fit space-x-6 rounded-none border-b border-blue-gray-50 bg-transparent p-0"
+              className="z-0 w-fit space-x-6 rounded-none border-b border-blue-gray-50 bg-transparent p-0"
               indicatorProps={{
                 className:
                   "bg-transparent border-b-2 border-green-500 shadow-none rounded-none",
@@ -202,9 +227,9 @@ const Form = () => {
             </TabsHeader>
           </div>
         </div>
-        <div className="mt-[100px] max-w-3xl mx-auto">
+        <div className="lg:mt-[100px] max-w-3xl mx-auto">
           <TabsBody>
-            <TabPanel value="Questions" className="space-y-4 pb-40">
+            <TabPanel value="Questions" className="space-y-4 pb-40 max-sm:space-y-2 max-sm:p-2">
               <Card className="shadow-none">
                 <CardBody className="space-y-4">
                   <h1 className="font-medium">
@@ -223,7 +248,7 @@ const Form = () => {
                       <h1 className="text-sm font-medium">{question.text}</h1>
                     </div>
                     {(question.type === 'radio' || question.type === 'checkbox') && (
-                      <div className="grid grid-cols-2">
+                      <div className="grid grid-cols-2 max-sm:grid-cols-1">
                         {question.option.map((option, oIndex) => {
                           if (question.type === 'radio') {
                             return (
@@ -232,6 +257,11 @@ const Form = () => {
                                 name={`radio_${qIndex}`}
                                 label={option.text}
                                 color="green"
+                                checked={answer.some(
+                                  (ans) =>
+                                    ans.questionId === question.id &&
+                                    ans.option.some((opt) => opt.optionId === option.id)
+                                )}
                                 onChange={() => handleAnswerChange(question.id, option)}
                                 labelProps={{ className: "font-normal text-sm" }}
                               />
@@ -242,6 +272,11 @@ const Form = () => {
                                 key={oIndex}
                                 label={option.text}
                                 color="green"
+                                checked={answer.some(
+                                  (ans) =>
+                                    ans.questionId === question.id &&
+                                    ans.option.some((opt) => opt.optionId === option.id)
+                                )}
                                 onChange={(e) => handleCheckboxChange(question.id, option, e.target.checked)}
                                 labelProps={{ className: "font-normal text-sm" }}
                               />
@@ -251,12 +286,14 @@ const Form = () => {
                       </div>
                     )}
                     {question.type === 'select' && (
-                      <Select label="Select" onChange={(val) => {
-                        const selectedOption = question.option.find(opt => opt.text === val);
-                        if (selectedOption) {
-                          handleAnswerChange(question.id, selectedOption);
-                        }
-                      }} color="green" variant="standard">
+                      <Select label="Select"
+                        value={answer.find(ans => ans.questionId === question.id)?.text || ""}
+                        onChange={(val) => {
+                          const selectedOption = question.option.find(opt => opt.text === val);
+                          if (selectedOption) {
+                            handleAnswerChange(question.id, selectedOption);
+                          }
+                        }} color="green" variant="standard">
                         {question.option.map((option, oIndex) => (
                           <Option key={oIndex} value={option.text}>
                             {option.text}
@@ -268,6 +305,7 @@ const Form = () => {
                       <div>
                         {question.option.map((option, oIndex) => (
                           <Inpt
+                            value={answer.find(ans => ans.questionId === question.id)?.text || ""}
                             key={oIndex}
                             label={option.text}
                             onChange={(e) => handleInputChange(question.id, option, e.target.value)}
@@ -293,10 +331,10 @@ const Form = () => {
                   </div>
                 </CardBody>
               </Card>
-              {response.length >= 1 && (
+              {response.length > 0 && (
                 <div className="mt-4 space-y-4">
                   {survey.question?.map((question, qIndex) => (
-                    <Card key={qIndex} className="shadow-none">
+                    <Card key={qIndex} className="shadow-none max-h-[340px] overflow-y-auto">
                       <CardBody className="space-y-6">
                         <div className="space-y-3">
                           <span className="text-xs font-normal">Question {qIndex + 1}</span>
@@ -308,7 +346,7 @@ const Form = () => {
                               const { series, labels } = calculateResponseData(question);
                               return (
                                 <Chart {...pieChartConfig(series, labels)} />
-                              );
+                              )
                             })()}
                             <div className="space-y-2">
                               {question.option.map((option, oIndex) => (

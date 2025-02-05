@@ -48,7 +48,7 @@ const Survey = () => {
   return (
     <div>
       <ScreenLoading loading={btnLoading} />
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-4 max-sm:space-y-2 max-sm:p-2">
         <div className="flex justify-end">
           <Btn onClick={() => navigate(`/admin/surveys/create`)} label="Create" color="green" />
         </div>

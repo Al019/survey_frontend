@@ -31,10 +31,10 @@ const DefaultLayout = () => {
   return (
     <div>
       <Card className="fixed h-[calc(100vh)] w-[272px] p-2 overflow-y-scroll rounded-none shadow-none border-r max-lg:hidden" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        <Navigation />
+        <Navigation setDrawerOpen={() => setDrawerOpen(false)} />
       </Card>
       <Drawer placement='left' open={drawerOpen} onClose={() => setDrawerOpen(!drawerOpen)} className='p-2 overflow-y-scroll w-[272px]'>
-        <Navigation />
+        <Navigation setDrawerOpen={() => setDrawerOpen(false)} />
       </Drawer>
       <div className="lg:ml-[272px]">
         <div className="z-10 p-2 sticky top-0 bg-white border-b lg:hidden">
