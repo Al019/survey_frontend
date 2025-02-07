@@ -1,4 +1,4 @@
-import { Card, CardBody, Checkbox, Option, Radio, Select, Tab, TabPanel, Tabs, TabsBody, TabsHeader } from "@material-tailwind/react"
+import { Card, CardBody, Checkbox, Option, Radio, Select, Tab, TabPanel, Tabs, TabsBody, TabsHeader, Textarea } from "@material-tailwind/react"
 import { useEffect, useState } from "react"
 import Btn from "../../../../components/Button"
 import { useParams } from "react-router-dom"
@@ -156,15 +156,14 @@ const Form = () => {
 
   const handleInputChange = (questionId, option, value) => {
     setAnswer((prev) => {
-      const trimmedValue = value.trim()
       const updatedAnswers = prev.filter((item) => item.questionId !== questionId)
 
-      if (trimmedValue !== "") {
+      if (value.trim() !== "") {
         const newAnswers = [
           ...updatedAnswers,
           {
             questionId,
-            text: trimmedValue,
+            text: value,
             option: [{ optionId: option.id }],
           },
         ]
@@ -214,7 +213,7 @@ const Form = () => {
               {survey.title}
             </h1>
             {activeTab === 'Questions' && (
-              <div className={`flex justify-end ${submitted && 'hidden'}`}>
+              <div className={`flex justify-end ${(submitted || parseInt(survey.limit) === survey.response_count) && 'hidden'}`}>
                 <Btn onClick={handleSubmit} label="Submit" color="green" />
               </div>
             )}
@@ -243,108 +242,119 @@ const Form = () => {
         <div className="lg:mt-[100px] max-w-3xl mx-auto">
           <TabsBody>
             <TabPanel value="Questions" className="p-0">
-              {submitted ? (
+              {parseInt(survey.limit) === survey.response_count ? (
                 <div className="p-4 max-sm:p-2">
                   <Card className="shadow-none">
                     <CardBody className="font-medium space-y-4">
-                      <h1 className="text-sm">Survey submitted successfully! Thank you for your response.</h1>
-                      <div className="flex justify-end">
-                        <Btn onClick={() => setSubmitted(false)} label="Response again" variant="outlined" color="green" />
-                      </div>
+                      <h1 className="text-sm">
+                        Survey has reached its response limit.
+                      </h1>
                     </CardBody>
                   </Card>
                 </div>
               ) : (
-                <div className="space-y-4 p-4 max-sm:space-y-2 max-sm:p-2">
-                  <Card className="shadow-none">
-                    <CardBody className="space-y-4">
-                      <h1 className="font-medium">
-                        {survey.title}
-                      </h1>
-                      <p className="text-sm font-normal">
-                        {survey.description}
-                      </p>
-                    </CardBody>
-                  </Card>
-                  {survey.question?.map((question, qIndex) => (
-                    <Card key={qIndex} className={`shadow-none ${validationErrors.includes(question.id) ? 'border-2 border-red-500' : 'border-2 border-transparent'}`}>
-                      <CardBody className="space-y-6">
-                        <div className="space-y-3">
-                          <span className="text-xs font-normal">Question {qIndex + 1} {question.required === 1 && <span className="text-red-500 text-sm">*</span>}</span>
-                          <h1 className="text-sm font-medium">{question.text}</h1>
+                submitted ? (
+                  <div className="p-4 max-sm:p-2">
+                    <Card className="shadow-none">
+                      <CardBody className="font-medium space-y-4">
+                        <h1 className="text-sm">
+                          Survey submitted successfully. Thank you for your response.
+                        </h1>
+                        <div className="flex justify-end">
+                          <Btn onClick={() => setSubmitted(false)} label="Response again" variant="outlined" color="green" />
                         </div>
-                        {(question.type === 'radio' || question.type === 'checkbox') && (
-                          <div className="grid grid-cols-2 max-sm:grid-cols-1">
-                            {question.option.map((option, oIndex) => {
-                              if (question.type === 'radio') {
-                                return (
-                                  <Radio
-                                    key={oIndex}
-                                    name={`radio_${qIndex}`}
-                                    label={option.text}
-                                    color="green"
-                                    checked={answer.some(
-                                      (ans) =>
-                                        ans.questionId === question.id &&
-                                        ans.option.some((opt) => opt.optionId === option.id)
-                                    )}
-                                    onChange={() => handleAnswerChange(question.id, option)}
-                                    labelProps={{ className: "font-normal text-sm" }}
-                                  />
-                                )
-                              } else if (question.type === 'checkbox') {
-                                return (
-                                  <Checkbox
-                                    key={oIndex}
-                                    label={option.text}
-                                    color="green"
-                                    checked={answer.some(
-                                      (ans) =>
-                                        ans.questionId === question.id &&
-                                        ans.option.some((opt) => opt.optionId === option.id)
-                                    )}
-                                    onChange={(e) => handleCheckboxChange(question.id, option, e.target.checked)}
-                                    labelProps={{ className: "font-normal text-sm" }}
-                                  />
-                                )
-                              }
-                            })}
-                          </div>
-                        )}
-                        {question.type === 'select' && (
-                          <Select label="Select"
-                            value={answer.find(ans => ans.questionId === question.id)?.text || ""}
-                            onChange={(val) => {
-                              const selectedOption = question.option.find(opt => opt.text === val);
-                              if (selectedOption) {
-                                handleAnswerChange(question.id, selectedOption);
-                              }
-                            }} color="green" variant="standard">
-                            {question.option.map((option, oIndex) => (
-                              <Option key={oIndex} value={option.text}>
-                                {option.text}
-                              </Option>
-                            ))}
-                          </Select>
-                        )}
-                        {question.type === 'input' && (
-                          <div>
-                            {question.option.map((option, oIndex) => (
-                              <Inpt
-                                value={answer.find(ans => ans.questionId === question.id)?.text || ""}
-                                key={oIndex}
-                                label={option.text}
-                                onChange={(e) => handleInputChange(question.id, option, e.target.value)}
-                                variant="standard"
-                              />
-                            ))}
-                          </div>
-                        )}
                       </CardBody>
                     </Card>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ) : (
+                  <div className="space-y-4 p-4 max-sm:space-y-2 max-sm:p-2">
+                    <Card className="shadow-none">
+                      <CardBody className="space-y-4">
+                        <h1 className="font-medium">
+                          {survey.title}
+                        </h1>
+                        <p className="text-sm font-normal">
+                          {survey.description}
+                        </p>
+                      </CardBody>
+                    </Card>
+                    {survey.question?.map((question, qIndex) => (
+                      <Card key={qIndex} className={`shadow-none ${validationErrors.includes(question.id) ? 'border-2 border-red-500' : 'border-2 border-transparent'}`}>
+                        <CardBody className="space-y-6">
+                          <div className="space-y-3">
+                            <span className="text-xs font-normal">Question {qIndex + 1} {question.required === 1 && <span className="text-red-500 text-sm">*</span>}</span>
+                            <h1 className="text-sm font-medium">{question.text}</h1>
+                          </div>
+                          {(question.type === 'radio' || question.type === 'checkbox') && (
+                            <div className="grid grid-cols-2 max-sm:grid-cols-1">
+                              {question.option.map((option, oIndex) => {
+                                if (question.type === 'radio') {
+                                  return (
+                                    <Radio
+                                      key={oIndex}
+                                      name={`radio_${qIndex}`}
+                                      label={option.text}
+                                      color="green"
+                                      checked={answer.some(
+                                        (ans) =>
+                                          ans.questionId === question.id &&
+                                          ans.option.some((opt) => opt.optionId === option.id)
+                                      )}
+                                      onChange={() => handleAnswerChange(question.id, option)}
+                                      labelProps={{ className: "font-normal text-sm" }}
+                                    />
+                                  )
+                                } else if (question.type === 'checkbox') {
+                                  return (
+                                    <Checkbox
+                                      key={oIndex}
+                                      label={option.text}
+                                      color="green"
+                                      checked={answer.some(
+                                        (ans) =>
+                                          ans.questionId === question.id &&
+                                          ans.option.some((opt) => opt.optionId === option.id)
+                                      )}
+                                      onChange={(e) => handleCheckboxChange(question.id, option, e.target.checked)}
+                                      labelProps={{ className: "font-normal text-sm" }}
+                                    />
+                                  )
+                                }
+                              })}
+                            </div>
+                          )}
+                          {question.type === 'select' && (
+                            <Select label="Select"
+                              value={answer.find(ans => ans.questionId === question.id)?.text || ""}
+                              onChange={(val) => {
+                                const selectedOption = question.option.find(opt => opt.text === val);
+                                if (selectedOption) {
+                                  handleAnswerChange(question.id, selectedOption);
+                                }
+                              }} color="green" variant="standard">
+                              {question.option.map((option, oIndex) => (
+                                <Option key={oIndex} value={option.text}>
+                                  {option.text}
+                                </Option>
+                              ))}
+                            </Select>
+                          )}
+                          {question.type === 'input' && (
+                            <div>
+                              {question.option.map((option, oIndex) => (
+                                <Textarea value={answer.find(ans => ans.questionId === question.id)?.text || ""}
+                                  key={oIndex}
+                                  label={option.text}
+                                  onChange={(e) => handleInputChange(question.id, option, e.target.value)}
+                                  variant="standard" color="green" />
+                              ))}
+                            </div>
+                          )}
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </div>
+                ))}
             </TabPanel>
             <TabPanel value="Responses" className="max-sm:p-2">
               <Card className="shadow-none">

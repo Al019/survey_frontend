@@ -195,17 +195,8 @@ const Create = () => {
               {survey.title}
             </h1>
             {activeTab === 'Questions' && (
-              <div className="flex justify-end items-center gap-4">
-                <Tooltip content="Import questions" placement="bottom">
-                  <Button color="green" variant="outlined">
-                    Import
-                  </Button>
-                </Tooltip>
-                <Tooltip content="Publish survey" placement="bottom">
-                  <Button onClick={handlePublish} color="green">
-                    Publish
-                  </Button>
-                </Tooltip>
+              <div className="flex justify-end">
+                <Btn label="Publish" onClick={handlePublish} color="green" />
               </div>
             )}
           </div>
@@ -235,15 +226,38 @@ const Create = () => {
             <TabPanel value="Questions" className="space-y-4 pb-40 max-sm:space-y-2 max-sm:p-2">
               <Card onClick={() => setSelected(0)} className={`shadow-none ${selected === 0 && "border-2 border-green-500"}`}>
                 <CardBody className="space-y-4 max-sm:p-4">
-                  <Inpt value={survey.title} onChange={(e) => handleChangeHeader("title", e.target.value)} label="Title" variant="standard" />
-                  <Textarea value={survey.description} onChange={(e) => handleChangeHeader("description", e.target.value)} label="Description (optional)" color="green" />
+                  <Textarea
+                    value={survey.title}
+                    onChange={(e) => handleChangeHeader("title", e.target.value)}
+                    label="Title"
+                    color="green"
+                    variant="standard"
+                    style={{
+                      minHeight: "32px",
+                    }}
+                  />
+                  <Textarea
+                    value={survey.description}
+                    onChange={(e) => handleChangeHeader("description", e.target.value)}
+                    label="Description (optional)"
+                    color="green"
+                    variant="standard"
+                    style={{
+                      minHeight: "32px",
+                    }}
+                  />
                 </CardBody>
               </Card>
               {survey.questions.map((question, qIndex) => (
                 <Card ref={el => questionRefs.current[qIndex] = el} onClick={() => setSelected(qIndex + 1)} key={qIndex} className={`shadow-none ${selected === qIndex + 1 && "border-2 border-green-500"}`}>
                   <CardBody className="space-y-4 max-sm:p-4">
                     <div className="flex items-center gap-4">
-                      <Inpt value={question.text} onChange={(e) => handleChangeQuestion(qIndex, "text", e.target.value)} label={`Question ${qIndex + 1}`} variant="standard" />
+                      <Textarea
+                        value={question.text} onChange={(e) => handleChangeQuestion(qIndex, "text", e.target.value)} label={`Question ${qIndex + 1}`} variant="standard" color="green"
+                        style={{
+                          minHeight: "32px",
+                        }}
+                      />
                       <div className="w-fit">
                         <Select value={question.type} onChange={(val) => handleChangeQuestion(qIndex, "type", val)} label="Type" color="green">
                           <Option value="radio">Multiple choice</Option>
@@ -319,7 +333,7 @@ const Create = () => {
                       </div>
                       <Switch
                         color="green"
-                        checked={switchLimit || (!!survey.limit && survey.limit !== "")}
+                        checked={switchLimit || Boolean(survey.limit?.trim())}
                         onChange={(e) => {
                           const isChecked = e.target.checked
                           setSwitchLimit(isChecked)
@@ -329,7 +343,7 @@ const Create = () => {
                         }}
                       />
                     </div>
-                    {switchLimit && (
+                    {(switchLimit || Boolean(survey.limit?.trim())) && (
                       <Inpt value={survey.limit} onChange={(e) => handleChangeHeader("limit", e.target.value)} variant="standard" type="number" />
                     )}
                   </div>
