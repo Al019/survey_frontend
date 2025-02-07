@@ -1,6 +1,6 @@
-import { PlusCircleIcon } from "@heroicons/react/24/outline"
+import { CloudArrowUpIcon, PlusCircleIcon } from "@heroicons/react/24/outline"
 import Btn from "../../../../components/Button"
-import { Button, Card, CardBody, Option, Select, Switch, Tab, TabPanel, Tabs, TabsBody, TabsHeader, Textarea, Tooltip } from "@material-tailwind/react"
+import { Accordion, AccordionBody, AccordionHeader, Button, Card, CardBody, Dialog, DialogBody, DialogFooter, DialogHeader, Option, Select, Switch, Tab, TabPanel, Tabs, TabsBody, TabsHeader, Textarea, Tooltip } from "@material-tailwind/react"
 import { useEffect, useRef, useState } from "react"
 import { IoMdRadioButtonOff, IoIosArrowDown } from "react-icons/io"
 import { IoCloseOutline } from "react-icons/io5"
@@ -12,6 +12,7 @@ import Inpt from "../../../../components/Input"
 import axios from "../../../../api/axios"
 import { RxTextAlignLeft } from "react-icons/rx";
 import { ScreenLoading } from "../../../../components/Loading"
+import * as XLSX from "xlsx"
 
 const tabs = ["Questions", "Settings"]
 
@@ -22,8 +23,12 @@ const Create = () => {
   const navigate = useNavigate()
   const [btnLoading, setBtnLoading] = useState(false)
   const [switchLimit, setSwitchLimit] = useState(false)
+  const [accordionOpen, setAccordionOpen] = useState(0)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [file, setFile] = useState(null)
+
   const [survey, setSurvey] = useState(() => {
-    const savedSurvey = localStorage.getItem("create-survey");
+    const savedSurvey = localStorage.getItem("create-survey")
     return savedSurvey ? JSON.parse(savedSurvey) : {
       title: "Untitled Form",
       description: "",
@@ -33,6 +38,13 @@ const Create = () => {
       ],
     }
   })
+
+  const handleAccordionOpen = (value) => setAccordionOpen(accordionOpen === value ? 0 : value)
+
+  const handleDialogOpen = () => {
+    setDialogOpen(!dialogOpen)
+    setFile(null)
+  }
 
   useEffect(() => {
     localStorage.setItem("create-survey", JSON.stringify(survey))
@@ -133,6 +145,35 @@ const Create = () => {
     }))
   }
 
+  const handleImport = () => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      const questions = json.slice(1).map(row => {
+        const type = row[1]
+        const options = type === 'Text' ? [{ text: 'Text' }] : row.slice(2).filter(option => option).map(option => ({ text: option }));
+
+        return {
+          text: row[0],
+          type: type === 'Multiple choice' && 'radio' || type === 'Checkboxes' && 'checkbox' || type === 'Dropdown' && 'select' || type === 'Text' && 'input',
+          required: 0,
+          options: options,
+        };
+      });
+
+      setSurvey(prevSurvey => ({
+        ...prevSurvey,
+        questions: questions,
+      }));
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
   const handlePublish = async () => {
     setBtnLoading(true)
     await axios.post('/api/survey/create-survey', { uuid: uuidv4(), survey })
@@ -154,8 +195,17 @@ const Create = () => {
               {survey.title}
             </h1>
             {activeTab === 'Questions' && (
-              <div className="flex justify-end">
-                <Btn onClick={handlePublish} label="Publish" color="green" />
+              <div className="flex justify-end items-center gap-4">
+                <Tooltip content="Import questions" placement="bottom">
+                  <Button color="green" variant="outlined">
+                    Import
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Publish survey" placement="bottom">
+                  <Button onClick={handlePublish} color="green">
+                    Publish
+                  </Button>
+                </Tooltip>
               </div>
             )}
           </div>
@@ -247,7 +297,7 @@ const Create = () => {
             <TabPanel value="Settings" className="space-y-4 max-sm:p-2">
               <Card className="shadow-none">
                 <CardBody className="space-y-4 max-sm:p-4">
-                  <h1 className="font-medium">Settings</h1>
+                  <h1 className="font-medium">Manage Survey</h1>
                   <hr className="border-blue-gray-200" />
                   <div className="flex justify-between items-center">
                     <div className="space-y-1">
@@ -283,12 +333,48 @@ const Create = () => {
                       <Inpt value={survey.limit} onChange={(e) => handleChangeHeader("limit", e.target.value)} variant="standard" type="number" />
                     )}
                   </div>
+                  <hr className="border-blue-gray-200" />
+                  <Accordion open={accordionOpen === 1} icon={<svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className={`${1 === accordionOpen ? "rotate-180" : ""} h-5 w-5 transition-transform`}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>}>
+                    <AccordionHeader className="p-0 pb-4" onClick={() => handleAccordionOpen(1)}>
+                      <div className="space-y-1">
+                        <h1 className="font-normal text-sm">Questions</h1>
+                        <p className="text-xs font-normal">Import existing questions.</p>
+                      </div>
+                    </AccordionHeader>
+                    <AccordionBody >
+                      <div className="flex px-1 gap-4 items-center">
+                        <Btn onClick={handleDialogOpen} label="Import" variant="outlined" color="green" />
+                        <Btn label="Download format" variant="text" />
+                      </div>
+                    </AccordionBody>
+                  </Accordion>
                 </CardBody>
               </Card>
             </TabPanel>
           </TabsBody>
         </div>
       </Tabs>
+
+      <Dialog size="xs" open={dialogOpen}>
+        <DialogHeader className="text-lg">Import Questions</DialogHeader>
+        <DialogBody>
+          <Btn onClick={() => document.getElementById("file").click()} label={`Choose File ${file ? `| ${file.name}` : ''}`} icon={<CloudArrowUpIcon className="w-5 h-5" />} variant="outlined" color="green" fullWidth />
+          <input onChange={(e) => setFile(e.target.files[0])} id="file" type="file" hidden />
+        </DialogBody>
+        <DialogFooter className="space-x-3">
+          <Btn label="Cancel" variant="text" onClick={handleDialogOpen} disabled={btnLoading} />
+          <Btn onClick={handleImport} label="Save" color="green" loading={btnLoading} />
+        </DialogFooter>
+      </Dialog>
 
       <ScreenLoading loading={btnLoading} />
     </div>

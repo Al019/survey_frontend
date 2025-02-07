@@ -1,8 +1,44 @@
 import { NewspaperIcon, PencilSquareIcon, UserIcon } from "@heroicons/react/24/outline"
-import { Card, CardBody, List, ListItem, ListItemPrefix } from "@material-tailwind/react"
+import { Card, CardBody, List, ListItem, ListItemPrefix, Switch } from "@material-tailwind/react"
 import User from '../../../../assets/images/user.png'
+import { useEffect, useState } from "react"
+import { useParams } from "react-router-dom"
+import axios from "../../../../api/axios"
+import { ScreenLoading } from "../../../../components/Loading"
 
 const Information = () => {
+  const [information, setInformation] = useState({})
+  const { enumerator_id } = useParams()
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const getInformation = async () => {
+      await axios.get('/api/enumerator/get-enumerator-information', {
+        params: { enumerator_id }
+      })
+        .then(({ data }) => {
+          setInformation(data)
+        })
+        .finally(() => {
+          setLoading(false)
+        })
+    }
+    getInformation()
+  }, [enumerator_id])
+
+  const toggleStatus = async () => {
+    const newStatus = information.status === "active" ? "inactive" : "active"
+    setInformation(prev => ({ ...prev, status: newStatus }))
+    await axios.post('/api/enumerator/update-enumerator-status', {
+      enumerator_id,
+      status: newStatus
+    })
+  }
+
+  if (loading) {
+    return <ScreenLoading loading={loading} />
+  }
+
   return (
     <div className='flex gap-4 p-4'>
       <Card className='sticky top-4 min-w-[272px] p-2 h-fit shadow-none'>
@@ -28,13 +64,14 @@ const Information = () => {
               <img src={User} className="h-24 w-24" />
               <div className='flex flex-col'>
                 <span className='text-base font-semibold'>
-                  Al Gaid
+                  {information.first_name} {information.last_name}
                 </span>
                 <span className='text-sm font-medium capitalize'>
-                  Enumerator
+                  {information.role}
                 </span>
               </div>
             </div>
+            <Switch checked={information.status === "active"} onChange={toggleStatus} color="green" label={information.status} labelProps={{ className: "font-normal capitalize text-sm" }} />
           </CardBody>
         </Card>
         <Card className='h-fit shadow-none'>
@@ -44,25 +81,25 @@ const Information = () => {
               <div className="flex flex-col space-y-2 border-b border-gray-400 pb-2">
                 <span className="text-xs font-medium">Last Name</span>
                 <span className='text-sm'>
-                  Gaid
+                  {information.last_name}
                 </span>
               </div>
               <div className="flex flex-col space-y-2 border-b border-gray-400 pb-2">
                 <span className="text-xs font-medium">First Name</span>
                 <span className='text-sm'>
-                  Al
+                  {information.first_name}
                 </span>
               </div>
               <div className="flex flex-col space-y-2 border-b border-gray-400 pb-2">
                 <span className="text-xs font-medium">Middle Name</span>
                 <span className='text-sm'>
-                  P
+                  {information.middle_name === null ? '-' : information.last_name}
                 </span>
               </div>
               <div className="flex flex-col space-y-2 border-b border-gray-400 pb-2">
                 <span className="text-xs font-medium">Gender</span>
                 <span className='text-sm capitalize'>
-                  Male
+                  {information.gender}
                 </span>
               </div>
               <div className="flex flex-col space-y-2 border-b border-gray-400 pb-2">
@@ -71,7 +108,7 @@ const Information = () => {
                   <PencilSquareIcon className='w-4 h-4 text-blue-500 cursor-pointer' />
                 </div>
                 <span className='text-sm'>
-                  al@gmail.com
+                  {information.email}
                 </span>
               </div>
             </div>

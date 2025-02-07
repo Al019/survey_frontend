@@ -19,6 +19,7 @@ const Form = () => {
   const [response, setResponse] = useState([])
   const [validationErrors, setValidationErrors] = useState([])
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const savedAnswers = localStorage.getItem(`answers_${uuid}`)
@@ -53,44 +54,42 @@ const Form = () => {
   })
 
   const calculateResponseData = (question) => {
-    // Initialize option counts based on option IDs
     const optionCounts = question.option.map(opt => ({
-      id: opt.id, // Use option ID instead of text
+      id: opt.id,
       text: opt.text,
       count: 0,
-    }));
+    }))
 
-    // Iterate through responses and count selected options
     response.forEach(res => {
       res.answer.forEach(ans => {
         if (ans.question_id === question.id) {
-          // Get the selected option IDs from the answer
-          const selectedOptionIds = ans.answer_option.map(ao => ao.option_id);
+          const selectedOptionIds = ans.answer_option.map(ao => ao.option_id)
 
-          // Update counts based on option IDs
           selectedOptionIds.forEach(optionId => {
-            const option = optionCounts.find(opt => opt.id === optionId);
+            const option = optionCounts.find(opt => opt.id === optionId)
             if (option) {
-              option.count += 1;
+              option.count += 1
             }
-          });
+          })
         }
-      });
-    });
+      })
+    })
 
-    // Calculate total responses
-    const totalResponses = optionCounts.reduce((sum, opt) => sum + opt.count, 0);
+    const totalResponses = optionCounts.reduce((sum, opt) => sum + opt.count, 0)
 
-    // Prepare data for the pie chart
-    const series = optionCounts.map(opt => opt.count);
-    const labels = optionCounts.map(opt => opt.text);
+    const series = optionCounts.map(opt => opt.count)
+    const labels = optionCounts.map(opt => opt.text)
 
-    return { series, labels, totalResponses };
-  };
+    return { series, labels, totalResponses }
+  }
 
   useEffect(() => {
-    getSurvey()
-    getResponse()
+    const getSurveyResponse = async () => {
+      await getSurvey()
+      await getResponse()
+      setLoading(false)
+    }
+    getSurveyResponse()
   }, [uuid])
 
   const getSurvey = async () => {
@@ -157,18 +156,24 @@ const Form = () => {
 
   const handleInputChange = (questionId, option, value) => {
     setAnswer((prev) => {
+      const trimmedValue = value.trim()
       const updatedAnswers = prev.filter((item) => item.questionId !== questionId)
-      const newAnswers = [
-        ...updatedAnswers,
-        {
-          questionId,
-          text: value,
-          option: [{ optionId: option.id }],
-        },
-      ]
 
-      localStorage.setItem(`answers_${uuid}`, JSON.stringify(newAnswers))
-      return newAnswers
+      if (trimmedValue !== "") {
+        const newAnswers = [
+          ...updatedAnswers,
+          {
+            questionId,
+            text: trimmedValue,
+            option: [{ optionId: option.id }],
+          },
+        ]
+        localStorage.setItem(`answers_${uuid}`, JSON.stringify(newAnswers))
+        return newAnswers
+      } else {
+        localStorage.setItem(`answers_${uuid}`, JSON.stringify(updatedAnswers))
+        return updatedAnswers
+      }
     })
   }
 
@@ -188,11 +193,16 @@ const Form = () => {
         getResponse()
         localStorage.removeItem(`answers_${uuid}`)
         setAnswer([])
+        setValidationErrors([])
         setSubmitted(true)
       })
       .finally(() => {
         setBtnLoading(false)
       })
+  }
+
+  if (loading) {
+    return <ScreenLoading loading={loading} />
   }
 
   return (
@@ -367,26 +377,34 @@ const Form = () => {
                           <h1 className="text-sm font-medium">{question.text}</h1>
                         </div>
                         {(question.type === 'radio' || question.type === 'select' || question.type === 'checkbox') && (
-                          <div className="grid grid-cols-2 place-items-center max-sm:grid-cols-1">
+                          <div>
                             {(() => {
-                              const { series, labels } = calculateResponseData(question);
+                              const { series, labels } = calculateResponseData(question)
                               return (
-                                <Chart {...pieChartConfig(series, labels)} />
+                                <div className="grid grid-cols-2 place-items-center max-sm:grid-cols-1">
+                                  <Chart {...pieChartConfig(series, labels)} />
+                                  <div className="space-y-2">
+                                    {question.option.map((option, oIndex) => {
+                                      const count = series[oIndex]
+                                      return (
+                                        <div key={oIndex} className="flex items-center gap-2">
+                                          <div
+                                            style={{ backgroundColor: colors[oIndex] }}
+                                            className="size-4 rounded-full"
+                                          ></div>
+                                          <p className="text-sm font-normal">
+                                            {option.text}
+                                          </p>
+                                          <span className="text-sm font-normal">
+                                            {`(${count})`}
+                                          </span>
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                </div>
                               )
                             })()}
-                            <div className="space-y-2">
-                              {question.option.map((option, oIndex) => (
-                                <div key={oIndex} className="flex items-center gap-2">
-                                  <div
-                                    style={{ backgroundColor: colors[oIndex] }}
-                                    className="size-4 rounded-full"
-                                  ></div>
-                                  <p className="text-xs font-normal">
-                                    {option.text}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
                           </div>
                         )}
                         {question.type === 'input' && (

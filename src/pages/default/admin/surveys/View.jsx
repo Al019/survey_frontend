@@ -77,70 +77,58 @@ const View = () => {
   })
 
   const calculateResponseData = (question) => {
-    // Initialize option counts based on option IDs
     const optionCounts = question.option.map(opt => ({
-      id: opt.id, // Use option ID instead of text
+      id: opt.id,
       text: opt.text,
       count: 0,
     }));
 
-    // Iterate through responses and count selected options
     response.forEach(res => {
       res.answer.forEach(ans => {
         if (ans.question_id === question.id) {
-          // Get the selected option IDs from the answer
-          const selectedOptionIds = ans.answer_option.map(ao => ao.option_id);
+          const selectedOptionIds = ans.answer_option.map(ao => ao.option_id)
 
-          // Update counts based on option IDs
           selectedOptionIds.forEach(optionId => {
-            const option = optionCounts.find(opt => opt.id === optionId);
+            const option = optionCounts.find(opt => opt.id === optionId)
             if (option) {
-              option.count += 1;
+              option.count += 1
             }
-          });
+          })
         }
-      });
-    });
+      })
+    })
 
-    // Calculate total responses
-    const totalResponses = optionCounts.reduce((sum, opt) => sum + opt.count, 0);
+    const totalResponses = optionCounts.reduce((sum, opt) => sum + opt.count, 0)
 
-    // Prepare data for the pie chart
-    const series = optionCounts.map(opt => opt.count);
-    const labels = optionCounts.map(opt => opt.text);
+    const series = optionCounts.map(opt => opt.count)
+    const labels = optionCounts.map(opt => opt.text)
 
-    return { series, labels, totalResponses };
+    return { series, labels, totalResponses }
   }
 
   const exportToExcel = () => {
-    // Prepare data for the Excel file
-    const data = [];
+    const data = []
 
-    // Add headers
-    const headers = ["Question", "Response"];
-    data.push(headers);
+    const headers = ["Question", "Response"]
+    data.push(headers)
 
-    // Add rows for each question and response
     survey.question?.forEach((question) => {
       response.forEach((res) => {
         const answer = res.answer.find((ans) => ans.question_id === question.id);
         if (answer) {
-          const row = [question.text, answer.text];
-          data.push(row);
+          const row = [question.text, answer.text]
+          data.push(row)
         }
-      });
-    });
+      })
+    })
 
-    // Create a worksheet
-    const worksheet = XLSX.utils.aoa_to_sheet(data);
+    const worksheet = XLSX.utils.aoa_to_sheet(data)
 
-    // Create a workbook
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Responses");
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Responses")
 
-    // Export the workbook to an Excel file
-    XLSX.writeFile(workbook, `Survey_Responses_${uuid}.xlsx`);
-  };
+    XLSX.writeFile(workbook, `Survey_Responses_${uuid}.xlsx`)
+  }
 
   if (loading) {
     return <ScreenLoading loading={loading} />
@@ -234,12 +222,12 @@ const View = () => {
             <Card className="shadow-none">
               <CardBody className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
+                  <p className="text-sm font-normal">
+                    Total Responses:
+                  </p>
                   <h1 className="font-medium">
                     {response.length}
                   </h1>
-                  <p className="text-sm font-normal">
-                    {response.length > 1 ? 'Responses' : 'Response'}
-                  </p>
                 </div>
                 {response.length > 0 && (
                   <Btn onClick={exportToExcel} label="Export" icon={<ArrowDownTrayIcon className="size-4" />} variant="outlined" color="green" />
@@ -289,7 +277,7 @@ const View = () => {
                       {question.type === 'input' && (
                         <div className="space-y-2">
                           {response.map((res, resIndex) => {
-                            const answer = res.answer.find(ans => ans.question_id === question.id);
+                            const answer = res.answer.find(ans => ans.question_id === question.id)
                             if (answer) {
                               return (
                                 <p key={resIndex} className="text-sm font-normal p-2 bg-gray-100 rounded-md">

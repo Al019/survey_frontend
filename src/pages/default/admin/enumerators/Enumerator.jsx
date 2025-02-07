@@ -1,7 +1,7 @@
 import { PlusCircleIcon } from "@heroicons/react/24/outline"
 import Btn from "../../../../components/Button"
 import { useEffect, useState } from "react"
-import { Button, Dialog, DialogBody, DialogFooter, DialogHeader } from "@material-tailwind/react"
+import { Button, Dialog, DialogBody, DialogFooter, DialogHeader, Option, Select } from "@material-tailwind/react"
 import Inpt from "../../../../components/Input"
 import axios from "../../../../api/axios"
 import Tbl from "../../../../components/Table"
@@ -13,6 +13,7 @@ const Enumerator = () => {
     last_name: "",
     first_name: "",
     middle_name: "",
+    gender: "",
     email: ""
   })
   const [enumerators, setEnumerators] = useState([])
@@ -26,6 +27,7 @@ const Enumerator = () => {
       last_name: "",
       first_name: "",
       middle_name: "",
+      gender: "",
       email: ""
     })
   }
@@ -52,8 +54,7 @@ const Enumerator = () => {
       })
   }
 
-  const handleAddEnumerator = async (e) => {
-    e.preventDefault()
+  const handleAddEnumerator = async () => {
     setBtnLoading(true)
     await axios.post('/api/enumerator/add-enumerator', formData)
       .then(() => {
@@ -93,22 +94,24 @@ const Enumerator = () => {
         <DialogHeader className="text-lg font-semibold">
           Add Enumerator
         </DialogHeader>
-        <form onSubmit={handleAddEnumerator}>
-          <DialogBody className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
-            <Inpt onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} label="Last name" required />
-            <Inpt onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} label="First name" required />
-            <Inpt onChange={(e) => setFormData({ ...formData, middle_name: e.target.value })} label="Middle name" placeholder="Optional" />
-            <Inpt onChange={(e) => setFormData({ ...formData, email: e.target.value })} label="Email address" required />
-          </DialogBody>
-          <DialogFooter className="space-x-2">
-            <Button variant="text" onClick={handleOpen} disabled={btnLoading}>
-              <span>Cancel</span>
-            </Button>
-            <Button type="submit" variant="gradient" color="green" loading={btnLoading}>
-              <span>Save</span>
-            </Button>
-          </DialogFooter>
-        </form>
+        <DialogBody className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+          <Inpt onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} label="Last name" />
+          <Inpt onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} label="First name" />
+          <Inpt onChange={(e) => setFormData({ ...formData, middle_name: e.target.value })} label="Middle name" placeholder="Optional" />
+          <Select onChange={(val) => setFormData({ ...formData, gender: val })} label="Gender" color="green">
+            <Option value="male">Male</Option>
+            <Option value="female">Female</Option>
+          </Select>
+          <Inpt onChange={(e) => setFormData({ ...formData, email: e.target.value })} label="Email address" />
+        </DialogBody>
+        <DialogFooter className="space-x-2">
+          <Button variant="text" onClick={handleOpen} disabled={btnLoading}>
+            <span>Cancel</span>
+          </Button>
+          <Button onClick={handleAddEnumerator} variant="gradient" color="green" loading={btnLoading}>
+            <span>Save</span>
+          </Button>
+        </DialogFooter>
       </Dialog>
     </div>
   )
