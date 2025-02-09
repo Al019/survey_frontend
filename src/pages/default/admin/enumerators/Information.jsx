@@ -1,19 +1,24 @@
 import { NewspaperIcon, PencilSquareIcon, UserIcon } from "@heroicons/react/24/outline"
-import { Card, CardBody, List, ListItem, ListItemPrefix, Switch } from "@material-tailwind/react"
+import { Card, CardBody, Chip, List, ListItem, ListItemPrefix, Switch, Tab, TabPanel, Tabs, TabsBody, TabsHeader } from "@material-tailwind/react"
 import User from '../../../../assets/images/user.png'
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import axios from "../../../../api/axios"
 import { ScreenLoading } from "../../../../components/Loading"
+import Btn from "../../../../components/Button"
+import Inpt from "../../../../components/Input"
+
+const tabs = ["Personal Details", "Response History"]
 
 const Information = () => {
   const [information, setInformation] = useState({})
   const { enumerator_id } = useParams()
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState("Personal Details")
 
   useEffect(() => {
     const getInformation = async () => {
-      await axios.get('/api/enumerator/get-enumerator-information', {
+      await axios.get('/api/admin/get-enumerator-information', {
         params: { enumerator_id }
       })
         .then(({ data }) => {
@@ -29,7 +34,7 @@ const Information = () => {
   const toggleStatus = async () => {
     const newStatus = information.status === "active" ? "inactive" : "active"
     setInformation(prev => ({ ...prev, status: newStatus }))
-    await axios.post('/api/enumerator/update-enumerator-status', {
+    await axios.post('/api/admin/update-enumerator-status', {
       enumerator_id,
       status: newStatus
     })
@@ -40,82 +45,71 @@ const Information = () => {
   }
 
   return (
-    <div className='flex gap-4 p-4'>
-      <Card className='sticky top-4 min-w-[272px] p-2 h-fit shadow-none'>
-        <List>
-          <ListItem>
-            <ListItemPrefix>
-              <UserIcon className="h-5 w-5" />
-            </ListItemPrefix>
-            <span className='mr-auto text-sm font-normal'>Personal Details</span>
-          </ListItem>
-          <ListItem>
-            <ListItemPrefix>
-              <NewspaperIcon className="h-5 w-5" />
-            </ListItemPrefix>
-            <span className='mr-auto text-sm font-normal'>Response History</span>
-          </ListItem>
-        </List>
-      </Card>
-      <div className='flex-1 space-y-4'>
-        <Card className='h-fit shadow-none'>
-          <CardBody className='flex items-center justify-between'>
-            <div className='flex items-center gap-4'>
-              <img src={User} className="h-24 w-24" />
-              <div className='flex flex-col'>
-                <span className='text-base font-semibold'>
-                  {information.first_name} {information.last_name}
-                </span>
-                <span className='text-sm font-medium capitalize'>
-                  {information.role}
-                </span>
-              </div>
+    <Tabs value={activeTab}>
+      <div className="h-[100px] px-4 pt-4 z-10 lg:fixed left-[272px] flex flex-col justify-between right-0 top-0 bg-white border-b">
+        <div className="h-12">
+          {activeTab === 'Personal Details' && (
+            <div className="flex justify-end">
+              <Btn label="Edit" color="green" variant="outlined" />
             </div>
-            <Switch checked={information.status === "active"} onChange={toggleStatus} color="green" label={information.status} labelProps={{ className: "font-normal capitalize text-sm" }} />
-          </CardBody>
-        </Card>
-        <Card className='h-fit shadow-none'>
-          <CardBody className='space-y-6'>
-            <span className="font-medium text-sm">Personal Details</span>
-            <div className='grid grid-cols-3 gap-10'>
-              <div className="flex flex-col space-y-2 border-b border-gray-400 pb-2">
-                <span className="text-xs font-medium">Last Name</span>
-                <span className='text-sm'>
-                  {information.last_name}
-                </span>
-              </div>
-              <div className="flex flex-col space-y-2 border-b border-gray-400 pb-2">
-                <span className="text-xs font-medium">First Name</span>
-                <span className='text-sm'>
-                  {information.first_name}
-                </span>
-              </div>
-              <div className="flex flex-col space-y-2 border-b border-gray-400 pb-2">
-                <span className="text-xs font-medium">Middle Name</span>
-                <span className='text-sm'>
-                  {information.middle_name === null ? '-' : information.last_name}
-                </span>
-              </div>
-              <div className="flex flex-col space-y-2 border-b border-gray-400 pb-2">
-                <span className="text-xs font-medium">Gender</span>
-                <span className='text-sm capitalize'>
-                  {information.gender}
-                </span>
-              </div>
-              <div className="flex flex-col space-y-2 border-b border-gray-400 pb-2">
-                <div className='flex items-center gap-2'>
-                  <span className="text-xs font-medium">Email Address</span>
-                  <PencilSquareIcon className='w-4 h-4 text-blue-500 cursor-pointer' />
-                </div>
-                <span className='text-sm'>
-                  {information.email}
-                </span>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
+          )}
+        </div>
+        <div className="">
+          <TabsHeader
+            className="z-0 w-fit space-x-6 rounded-none border-b border-blue-gray-50 bg-transparent p-0"
+            indicatorProps={{
+              className:
+                "bg-transparent border-b-2 border-green-500 shadow-none rounded-none",
+            }}
+          >
+            {tabs.map((tab, index) => (
+              <Tab
+                key={index}
+                value={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`text-sm whitespace-nowrap ${activeTab === tab && "text-blue-gray-800 font-medium"}`}
+              >
+                {tab}
+              </Tab>
+            ))}
+          </TabsHeader>
+        </div>
       </div>
-    </div>
+      <div className="lg:mt-[22px] max-w-[800px] mx-auto">
+        <TabsBody>
+          <TabPanel value="Personal Details" className="space-y-4">
+            <Card className='h-fit shadow-none'>
+              <CardBody className="flex justify-between items-center">
+                <div className='flex items-center gap-4'>
+                  <img src={User} className="h-24 w-24" />
+                  <div className='flex flex-col space-y-2'>
+                    <span className='text-base font-semibold text-blue-gray-800'>
+                      {information.first_name} {information.last_name}
+                    </span>
+                    <Chip value={information?.role === 'admin' && 'Administrator' || information?.role === 'enumerator' && 'Enumerator'} variant="outlined" className="w-fit mb-4" color="green" />
+                  </div>
+                </div>
+                <Switch checked={information.status === "active"} onChange={toggleStatus} color="green" label={information.status} labelProps={{ className: "font-normal capitalize text-sm" }} />
+              </CardBody>
+            </Card>
+            <Card className='h-fit shadow-none'>
+              <CardBody className='space-y-6'>
+                <div className='grid grid-cols-2 gap-4'>
+                  <Inpt value={information.last_name} variant="standard" label="Last Name" />
+                  <Inpt value={information.first_name} variant="standard" label="First Name" />
+                  <Inpt value={information.middle_name === null ? '-' : information.middle_name} variant="standard" label="Middle Name" />
+                  <Inpt value={information.gender} variant="standard" label="Gender" className="capitalize" />
+                  <Inpt value={information.email} variant="standard" label="Email Address" />
+                </div>
+              </CardBody>
+            </Card>
+          </TabPanel>
+          <TabPanel value="Response History">
+
+          </TabPanel>
+        </TabsBody>
+      </div>
+    </Tabs>
   )
 }
 

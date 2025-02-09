@@ -13,6 +13,7 @@ import axios from "../../../../api/axios"
 import { RxTextAlignLeft } from "react-icons/rx";
 import { ScreenLoading } from "../../../../components/Loading"
 import * as XLSX from "xlsx"
+import { ToastContainer, toast } from 'react-toastify'
 
 const tabs = ["Questions", "Settings"]
 
@@ -170,13 +171,16 @@ const Create = () => {
         ...prevSurvey,
         questions: questions,
       }));
+
+      setDialogOpen(false)
+      toast.success("The questions have been successfully imported.");
     };
     reader.readAsArrayBuffer(file);
   };
 
   const handlePublish = async () => {
     setBtnLoading(true)
-    await axios.post('/api/survey/create-survey', { uuid: uuidv4(), survey })
+    await axios.post('/api/admin/create-survey', { uuid: uuidv4(), survey })
       .then(() => {
         navigate('/admin/surveys')
         localStorage.removeItem("create-survey")
@@ -190,13 +194,13 @@ const Create = () => {
     <div>
       <Tabs value={activeTab}>
         <div className="h-[100px] px-4 pt-4 z-10 lg:fixed left-[272px] flex flex-col justify-between right-0 top-0 bg-white border-b">
-          <div className="grid grid-cols-2 items-center h-10">
-            <h1 className="text-lg font-medium">
+          <div className="grid grid-cols-2 items-center h-12">
+            <h1 className="text-base font-medium text-blue-gray-800 break-words line-clamp-2">
               {survey.title}
             </h1>
             {activeTab === 'Questions' && (
               <div className="flex justify-end">
-                <Btn label="Publish" onClick={handlePublish} color="green" />
+                <Btn label="Publish" onClick={handlePublish} color="green" variant="outlined" />
               </div>
             )}
           </div>
@@ -213,7 +217,7 @@ const Create = () => {
                   key={index}
                   value={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`text-sm ${activeTab === tab && "text-gray-800 font-medium"}`}
+                  className={`text-sm ${activeTab === tab && "text-blue-gray-800 font-medium"}`}
                 >
                   {tab}
                 </Tab>
@@ -221,7 +225,7 @@ const Create = () => {
             </TabsHeader>
           </div>
         </div>
-        <div className="lg:mt-[100px] max-w-3xl mx-auto">
+        <div className="lg:mt-[22px] max-w-[800px] mx-auto">
           <TabsBody>
             <TabPanel value="Questions" className="space-y-4 pb-40 max-sm:space-y-2 max-sm:p-2">
               <Card onClick={() => setSelected(0)} className={`shadow-none ${selected === 0 && "border-2 border-green-500"}`}>
@@ -299,7 +303,7 @@ const Create = () => {
                 </Card>
               ))}
               <div className="lg:left-[272px] fixed bottom-0 inset-x-0 flex items-center justify-center">
-                <Card className="mx-4 max-sm:mx-2 shadow-none flex items-center justify-center border-t max-w-[736px] w-full p-2 rounded-none rounded-t-xl">
+                <Card className="mx-4 max-sm:mx-2 shadow-none flex items-center justify-center border-t max-w-[768px] w-full p-2 rounded-none rounded-t-xl">
                   <Tooltip content="Add question" placement="top">
                     <Button onClick={handleAddQuestion} variant="text" className="p-2">
                       <PlusCircleIcon className="size-7 text-blue-gray-500" />
@@ -329,7 +333,7 @@ const Create = () => {
                     <div className="flex justify-between items-center">
                       <div className="space-y-1">
                         <h1 className="font-normal text-sm">Limit</h1>
-                        <p className="text-xs font-normal">Customize limit of responses.</p>
+                        <p className="text-xs font-normal">Set limit of responses.</p>
                       </div>
                       <Switch
                         color="green"
@@ -389,6 +393,8 @@ const Create = () => {
           <Btn onClick={handleImport} label="Save" color="green" loading={btnLoading} />
         </DialogFooter>
       </Dialog>
+
+      <ToastContainer className="text-sm" />
 
       <ScreenLoading loading={btnLoading} />
     </div>

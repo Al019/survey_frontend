@@ -37,7 +37,7 @@ const Enumerator = () => {
   }, [])
 
   const getEnumerator = async () => {
-    axios.get('/api/enumerator/get-enumerator')
+    axios.get('/api/admin/get-enumerator')
       .then(({ data }) => {
         const formattedEnumerators = data.map((enumerator) => ({
           id: enumerator.id,
@@ -56,7 +56,7 @@ const Enumerator = () => {
 
   const handleAddEnumerator = async () => {
     setBtnLoading(true)
-    await axios.post('/api/enumerator/add-enumerator', formData)
+    await axios.post('/api/admin/add-enumerator', formData)
       .then(() => {
         handleOpen()
         getEnumerator()
@@ -85,7 +85,7 @@ const Enumerator = () => {
     <div>
       <div className="p-4 space-y-4 max-sm:space-y-2 max-sm:p-2">
         <div className="flex justify-end">
-          <Btn onClick={handleOpen} label="Add" color="green" />
+          <Btn onClick={handleOpen} label="Add" color="green" variant="outlined" />
         </div>
         <Tbl title="Enumerators" data={data} idKey="id" onClickView={handleNavigate} loading={loading} />
       </div>
@@ -95,20 +95,17 @@ const Enumerator = () => {
           Add Enumerator
         </DialogHeader>
         <DialogBody className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
-          <Inpt onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} label="Last name" />
-          <Inpt onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} label="First name" />
-          <Inpt onChange={(e) => setFormData({ ...formData, middle_name: e.target.value })} label="Middle name" placeholder="Optional" />
-          <Select onChange={(val) => setFormData({ ...formData, gender: val })} label="Gender" color="green">
+          <Inpt variant="standard" onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} label="Last name" />
+          <Inpt variant="standard" onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} label="First name" />
+          <Inpt variant="standard" onChange={(e) => setFormData({ ...formData, middle_name: e.target.value })} label="Middle name" placeholder="Optional" />
+          <Select variant="standard" onChange={(val) => setFormData({ ...formData, gender: val })} label="Gender" color="green">
             <Option value="male">Male</Option>
             <Option value="female">Female</Option>
           </Select>
-          <Inpt onChange={(e) => setFormData({ ...formData, email: e.target.value })} label="Email address" />
+          <Inpt variant="standard" onChange={(e) => setFormData({ ...formData, email: e.target.value })} label="Email address" />
         </DialogBody>
-        <DialogFooter className="space-x-2">
-          <Button variant="text" onClick={handleOpen} disabled={btnLoading}>
-            <span>Cancel</span>
-          </Button>
-          <Button onClick={handleAddEnumerator} variant="gradient" color="green" loading={btnLoading}>
+        <DialogFooter>
+          <Button onClick={handleAddEnumerator} variant="outlined" color="green" loading={btnLoading}>
             <span>Save</span>
           </Button>
         </DialogFooter>

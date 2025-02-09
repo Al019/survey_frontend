@@ -11,7 +11,7 @@ const Survey = () => {
 
   useEffect(() => {
     const getSurvey = async () => {
-      await axios.get('/api/survey/get-survey')
+      await axios.get('/api/enumerator/get-survey')
         .then(({ data }) => {
           const formattedSurveys = data.map((survey) => ({
             id: survey.id,

@@ -62,8 +62,8 @@ const Tbl = ({ title, data, onClickView, idKey, onClickEdit, loading }) => {
             <span>List of {title}</span>
             <span>Total: {filteredData.length}</span>
           </div>
-          <div className='w-full max-w-[250px]'>
-            <Input onChange={handleSearch} color="green" label="Search" icon={<MagnifyingGlassIcon className="h-5 w-5" />} />
+          <div className='w-fit'>
+            <Input variant="standard" onChange={handleSearch} color="green" label="Search" />
           </div>
         </div>
         <div className='overflow-x-auto'>
@@ -100,7 +100,7 @@ const Tbl = ({ title, data, onClickView, idKey, onClickEdit, loading }) => {
                       {Object.entries(displayData).map(([key, body], bodyIndex) => (
                         <td key={bodyIndex} className={`p-4 font-normal text-sm whitespace-nowrap`}>
                           {key === "status" ? (
-                            <Chip color={body === 'active' ? 'green' : 'red'} value={body} variant="ghost" className="w-fit" />
+                            <Chip color={body === 'active' ? 'green' : 'red'} value={body} variant="outlined" className="w-fit" />
                           ) : body === null ? (
                             "-"
                           ) : (
@@ -134,14 +134,13 @@ const Tbl = ({ title, data, onClickView, idKey, onClickEdit, loading }) => {
                   className="flex items-center gap-3"
                   disabled={currentPage === 1}>
                   <ArrowLeftIcon strokeWidth={2} className="h-4 w-4" />
-                  <span>Previous</span>
                 </Button>
                 <div className="flex items-center gap-2">
                   {numbers.map((number, index) => (
                     <IconButton
                       onClick={() => changeCurrentPage(number)}
                       color='green'
-                      variant={currentPage === number ? 'filled' : 'text'}
+                      variant={currentPage === number ? 'outlined' : 'text'}
                       key={index}
                       size='sm'>
                       {number}
@@ -154,7 +153,6 @@ const Tbl = ({ title, data, onClickView, idKey, onClickEdit, loading }) => {
                   variant="text"
                   className="flex items-center gap-3"
                   disabled={currentPage === npage}>
-                  <span>Next</span>
                   <ArrowRightIcon strokeWidth={2} className="h-4 w-4" />
                 </Button>
               </div>

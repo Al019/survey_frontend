@@ -16,7 +16,7 @@ const Survey = () => {
 
   useEffect(() => {
     const getSurvey = async () => {
-      await axios.get('/api/survey/get-survey')
+      await axios.get('/api/admin/get-survey')
         .then(({ data }) => {
           const formattedSurveys = data.map((survey) => ({
             id: survey.id,
@@ -52,7 +52,7 @@ const Survey = () => {
       <ScreenLoading loading={btnLoading} />
       <div className="p-4 space-y-4 max-sm:space-y-2 max-sm:p-2">
         <div className="flex justify-end">
-          <Btn onClick={() => navigate(`/admin/surveys/create`)} label="Create" color="green" />
+          <Btn onClick={() => navigate(`/admin/surveys/create`)} label="Create" color="green" variant="outlined" />
         </div>
         <Tbl title="Surveys" data={data} idKey="uuid" onClickView={handleNavigate} loading={loading} />
       </div>

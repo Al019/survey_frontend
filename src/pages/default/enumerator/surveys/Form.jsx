@@ -93,7 +93,7 @@ const Form = () => {
   }, [uuid])
 
   const getSurvey = async () => {
-    await axios.get('/api/survey/get-survey-questionnaire', {
+    await axios.get('/api/admin/get-survey-questionnaire', {
       params: { uuid }
     })
       .then(({ data }) => {
@@ -102,7 +102,7 @@ const Form = () => {
   }
 
   const getResponse = async () => {
-    await axios.get('/api/enumerator/get-response', {
+    await axios.get('/api/enumerator/get-survey-response', {
       params: { uuid }
     })
       .then(({ data }) => {
@@ -208,13 +208,13 @@ const Form = () => {
     <div>
       <Tabs value={activeTab}>
         <div className="h-[100px] px-4 pt-4 lg:z-10 lg:fixed left-[272px] flex flex-col justify-between right-0 top-0 bg-white border-b">
-          <div className="grid grid-cols-2 items-center h-10">
+          <div className="grid grid-cols-2 items-center h-12">
             <h1 className="text-lg font-medium">
               {survey.title}
             </h1>
             {activeTab === 'Questions' && (
               <div className={`flex justify-end ${(submitted || parseInt(survey.limit) === survey.response_count) && 'hidden'}`}>
-                <Btn onClick={handleSubmit} label="Submit" color="green" />
+                <Btn onClick={handleSubmit} label="Submit" color="green" variant="outlined" />
               </div>
             )}
           </div>
@@ -346,7 +346,11 @@ const Form = () => {
                                   key={oIndex}
                                   label={option.text}
                                   onChange={(e) => handleInputChange(question.id, option, e.target.value)}
-                                  variant="standard" color="green" />
+                                  variant="standard"
+                                  color="green"
+                                  style={{
+                                    minHeight: "32px",
+                                  }} />
                               ))}
                             </div>
                           )}
