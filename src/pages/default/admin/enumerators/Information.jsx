@@ -7,8 +7,9 @@ import axios from "../../../../api/axios"
 import { ScreenLoading } from "../../../../components/Loading"
 import Btn from "../../../../components/Button"
 import Inpt from "../../../../components/Input"
+import Tbl from "../../../../components/Table"
 
-const tabs = ["Personal Details", "Response History"]
+const tabs = ["Personal Details"]
 
 const Information = () => {
   const [information, setInformation] = useState({})
@@ -47,10 +48,18 @@ const Information = () => {
   return (
     <Tabs value={activeTab}>
       <div className="h-[100px] px-4 pt-4 z-10 lg:fixed left-[272px] flex flex-col justify-between right-0 top-0 bg-white border-b">
-        <div className="h-12">
+        <div className="grid grid-cols-2 items-center h-12">
+          <h1 className="text-base font-medium text-blue-gray-800 break-words line-clamp-2">
+            {information.first_name} {information.last_name}
+          </h1>
           {activeTab === 'Personal Details' && (
             <div className="flex justify-end">
               <Btn label="Edit" color="green" variant="outlined" />
+            </div>
+          )}
+          {activeTab === 'Assignments' && (
+            <div className="flex justify-end">
+              <Btn label="Assign" color="green" variant="outlined" />
             </div>
           )}
         </div>
@@ -103,9 +112,6 @@ const Information = () => {
                 </div>
               </CardBody>
             </Card>
-          </TabPanel>
-          <TabPanel value="Response History">
-
           </TabPanel>
         </TabsBody>
       </div>

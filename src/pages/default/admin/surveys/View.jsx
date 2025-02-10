@@ -1,5 +1,5 @@
 import Btn from "../../../../components/Button"
-import { Button, Card, CardBody, Option, Select, Switch, Tab, TabPanel, Tabs, TabsBody, TabsHeader, Textarea, Tooltip } from "@material-tailwind/react"
+import { Button, Card, CardBody, Dialog, DialogBody, DialogFooter, DialogHeader, Option, Select, Switch, Tab, TabPanel, Tabs, TabsBody, TabsHeader, Textarea, Tooltip } from "@material-tailwind/react"
 import { useEffect, useRef, useState } from "react"
 import { IoMdRadioButtonOff, IoIosArrowDown } from "react-icons/io"
 import { IoCloseOutline } from "react-icons/io5"
@@ -25,13 +25,21 @@ const View = () => {
   const [response, setResponse] = useState([])
   const [loading, setLoading] = useState(true)
   const [switchLimit, setSwitchLimit] = useState(false)
-  const [assignEnumerator, setAssignEnumerator] = useState([])
-  const [assignEnumeratorSurvey, setAssignEnumeratorSurvey] = useState([])
+  const [open, setOpen] = useState(false)
+  const [assignEnumerators, setAssignEnumerators] = useState([])
+  const [assignEnumeratorSurveys, setAssignEnumeratorSurveys] = useState([])
+  const [btnLoading, setBtnLoading] = useState({})
+
+  const handleOpen = () => {
+    setOpen(!open)
+  }
 
   useEffect(() => {
     const getSurveyResponse = async () => {
       await getSurvey()
       await getResponse()
+      await getAssignEnumerator()
+      await getAssignEnumeratorSurvey()
       setLoading(false)
     }
     getSurveyResponse()
@@ -55,36 +63,30 @@ const View = () => {
       })
   }
 
-  useEffect(() => {
-    if (survey && survey.id) {
-      const getEnumerator = async () => {
-        await getAssignEnumerator()
-        await getAssignEnumeratorSurvey()
-      }
-      getEnumerator()
-    }
-  }, [survey])
-
   const getAssignEnumerator = async () => {
     await axios.get('/api/admin/get-assign-enumerator', {
-      params: { survey_id: survey.id }
+      params: { uuid }
     })
       .then(({ data }) => {
-        setAssignEnumerator(data)
+        const formattedAssignEnumerator = data.map((enumerator) => ({
+          id: enumerator.id,
+          name: `${enumerator.first_name} ${enumerator.last_name}`
+        }))
+        setAssignEnumerators(formattedAssignEnumerator)
       })
   }
 
   const getAssignEnumeratorSurvey = async () => {
     await axios.get('/api/admin/get-assign-enumerator-survey', {
-      params: { survey_id: survey.id }
+      params: { uuid }
     })
       .then(({ data }) => {
-        const formattedEnumerator = data.map((enumerator) => ({
+        const formattedAssignEnumeratorSurvey = data.map((enumerator) => ({
           id: enumerator.id,
           name: `${enumerator.first_name} ${enumerator.last_name}`,
           response: enumerator.response_count
         }))
-        setAssignEnumeratorSurvey(formattedEnumerator)
+        setAssignEnumeratorSurveys(formattedAssignEnumeratorSurvey)
       })
   }
 
@@ -167,12 +169,31 @@ const View = () => {
     XLSX.writeFile(workbook, `Survey_Responses_${uuid}.xlsx`)
   }
 
-  const data = {
+  const assigndata = {
     theads: [
       "Name",
       "Responses",
     ],
-    tbodies: assignEnumeratorSurvey
+    tbodies: assignEnumeratorSurveys
+  }
+
+  const enumeratorData = {
+    theads: [
+      "Name",
+    ],
+    tbodies: assignEnumerators
+  }
+
+  const handleAssignEnumerator = async (enumerator) => {
+    setBtnLoading((prev) => ({ ...prev, [enumerator.id]: true }))
+    await axios.post('/api/admin/assign-enumerator', { survey_id: survey.id, enumerator_id: enumerator.id })
+      .then(() => {
+        getAssignEnumerator()
+        getAssignEnumeratorSurvey()
+      })
+      .finally(() => {
+        setBtnLoading((prev) => ({ ...prev, [enumerator.id]: false }))
+      })
   }
 
   if (loading) {
@@ -189,7 +210,7 @@ const View = () => {
             </h1>
             {activeTab === 'Assignments' && (
               <div className="flex justify-end">
-                <Btn label="Assign" color="green" variant="outlined" />
+                <Btn onClick={handleOpen} label="Assign" color="green" variant="outlined" />
               </div>
             )}
           </div>
@@ -376,7 +397,7 @@ const View = () => {
               )}
             </TabPanel>
             <TabPanel value="Assignments">
-              <Tbl title="Enumerators" data={data} onClickEdit />
+              <Tbl title="Assign Enumerators" data={assigndata} />
             </TabPanel>
             <TabPanel value="Settings" className="space-y-4 max-sm:p-2">
               <Card className="shadow-none">
@@ -415,6 +436,15 @@ const View = () => {
           </TabsBody>
         </div>
       </Tabs>
+
+      <Dialog size="md" open={open} handler={handleOpen} className="h-[500px]">
+        <div className="px-4 pt-4 pb-1">
+          <Btn label="Assign All" color="green" size="sm" variant="outlined" />
+        </div>
+        <DialogBody className="h-full overflow-y-auto p-0">
+          <Tbl title="Enumerators" data={enumeratorData} onClickAssign={handleAssignEnumerator} btnLoading={btnLoading} />
+        </DialogBody>
+      </Dialog>
     </div>
   )
 }

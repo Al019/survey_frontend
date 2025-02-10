@@ -24,7 +24,10 @@ const Profile = () => {
   return (
     <Tabs value={activeTab}>
       <div className="h-[100px] px-4 pt-4 z-10 lg:fixed left-[272px] flex flex-col justify-between right-0 top-0 bg-white border-b">
-        <div className="h-12">
+        <div className="grid grid-cols-2 items-center h-12">
+          <h1 className="text-base font-medium text-blue-gray-800 break-words line-clamp-2">
+            {user.first_name} {user.last_name}
+          </h1>
           {activeTab === 'Personal Details' && (
             <div className="flex justify-end">
               <Btn label="Edit" color="green" variant="outlined" />

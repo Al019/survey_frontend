@@ -2,8 +2,9 @@ import { ArrowLeftIcon, ArrowRightIcon, MagnifyingGlassIcon, PencilSquareIcon } 
 import { Button, Card, CardBody, Chip, IconButton, Input, Spinner } from "@material-tailwind/react"
 import { useEffect, useState } from "react"
 import PropagateLoader from "react-spinners/PropagateLoader"
+import Btn from "./Button"
 
-const Tbl = ({ title, data, onClickView, idKey, onClickEdit, loading }) => {
+const Tbl = ({ title, data, onClickView, idKey, onClickEdit, loading, onClickAssign, btnLoading }) => {
   const [filteredData, setFilteredData] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -82,7 +83,7 @@ const Tbl = ({ title, data, onClickView, idKey, onClickEdit, loading }) => {
                       {head}
                     </th>
                   ))}
-                  {onClickEdit && (
+                  {(onClickEdit || onClickAssign) && (
                     <th className="font-medium text-sm p-4 whitespace-nowrap">Action</th>
                   )}
                 </tr>
@@ -113,6 +114,11 @@ const Tbl = ({ title, data, onClickView, idKey, onClickEdit, loading }) => {
                           <IconButton onClick={() => onClickEdit(record)} color="green" size="sm" variant="text">
                             <PencilSquareIcon className="w-5 h-5" />
                           </IconButton>
+                        </td>
+                      )}
+                      {onClickAssign && (
+                        <td className="p-4 cursor-pointer">
+                          <Btn onClick={() => onClickAssign(record)} label="Assign" size="sm" color="green" variant="outlined" loading={btnLoading[record.id]} />
                         </td>
                       )}
                     </tr>

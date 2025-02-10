@@ -209,7 +209,7 @@ const Form = () => {
       <Tabs value={activeTab}>
         <div className="h-[100px] px-4 pt-4 lg:z-10 lg:fixed left-[272px] flex flex-col justify-between right-0 top-0 bg-white border-b">
           <div className="grid grid-cols-2 items-center h-12">
-            <h1 className="text-lg font-medium">
+            <h1 className="text-base font-medium text-blue-gray-800 break-words line-clamp-2">
               {survey.title}
             </h1>
             {activeTab === 'Questions' && (
@@ -231,7 +231,7 @@ const Form = () => {
                   key={index}
                   value={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`text-sm ${activeTab === tab && "text-gray-800 font-medium"}`}
+                  className={`text-sm ${activeTab === tab && "text-blue-gray-800 font-medium"}`}
                 >
                   {tab}
                 </Tab>
@@ -239,7 +239,7 @@ const Form = () => {
             </TabsHeader>
           </div>
         </div>
-        <div className="lg:mt-[100px] max-w-3xl mx-auto">
+        <div className="lg:mt-[22px] max-w-[800px] mx-auto">
           <TabsBody>
             <TabPanel value="Questions" className="p-0">
               {parseInt(survey.limit) === survey.response_count ? (

@@ -40,9 +40,9 @@ const Navigation = ({ setDrawerOpen }) => {
           <AccordionBody className="py-1">
             <List className="p-0">
               <ListItem onClick={() => {
-                navigate(`/admin/profile`)
+                navigate(`/${user?.role}/profile`)
                 setDrawerOpen(false)
-              }} className={`focus:text-green-500 focus:bg-transparent ${route.pathname.startsWith('/admin/profile') && 'border-l-4 border-green-500 text-green-500 hover:text-green-500'}`}>
+              }} className={`focus:text-green-500 focus:bg-transparent ${route.pathname.startsWith(`/${user?.role}/profile`) && 'border-l-4 border-green-500 text-green-500 hover:text-green-500'}`}>
                 <ListItemPrefix>
                   <ChevronRightIcon strokeWidth={2.5} className="h-3.5 w-3.5" />
                 </ListItemPrefix>
